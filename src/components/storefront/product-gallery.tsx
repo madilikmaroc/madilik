@@ -24,7 +24,7 @@ export function ProductGallery({
   return (
     <div className={cn("space-y-3 sm:space-y-4", className)}>
       {/* Main image */}
-      <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-muted sm:aspect-square lg:aspect-[4/5]">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-muted sm:aspect-square lg:aspect-[4/5]">
         {hasImages && displayImages[selectedIndex] && !imgError[selectedIndex] ? (
           <Image
             src={displayImages[selectedIndex]!}
@@ -54,10 +54,10 @@ export function ProductGallery({
               type="button"
               onClick={() => setSelectedIndex(i)}
               className={cn(
-                "relative aspect-square w-14 sm:w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors",
+                "relative aspect-square w-[70px] shrink-0 overflow-hidden rounded-xl border-2 transition-all",
                 selectedIndex === i
-                  ? "border-foreground"
-                  : "border-transparent hover:border-muted-foreground/50",
+                  ? "border-primary ring-2 ring-primary/20"
+                  : "border-transparent hover:border-muted-foreground/40",
               )}
             >
               <Image
@@ -74,7 +74,7 @@ export function ProductGallery({
       ) : (
         hasImages && (
           <div className="flex gap-2">
-            <div className="relative aspect-square w-14 sm:w-16 shrink-0 overflow-hidden rounded-lg border-2 border-foreground bg-muted">
+            <div className="relative aspect-square w-[70px] shrink-0 overflow-hidden rounded-xl border-2 border-primary bg-muted ring-2 ring-primary/20">
               <Image
                 src={displayImages[0]!}
                 alt={productName}

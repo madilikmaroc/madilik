@@ -78,7 +78,7 @@ export function Navbar({
         )}
 
         {/* Main header row — dir="ltr" so Arabic RTL doesn't reverse icon positions */}
-        <nav dir="ltr" className="relative container mx-auto flex h-14 items-center px-4 sm:h-16 md:h-16 lg:h-20">
+        <nav dir="ltr" className="relative container mx-auto flex pb-3 pt-0 sm:pb-4 sm:pt-0 items-center px-4">
 
           {/* ===== MOBILE LAYOUT (< lg) ===== */}
           {/* Left: hamburger */}
@@ -100,8 +100,8 @@ export function Navbar({
                       src={siteConfig.headerLogo}
                       alt={siteConfig.name}
                       width={400}
-                      height={120}
-                      className="h-14 w-auto object-contain"
+                      height={140}
+                      className="h-[140px] w-auto object-contain"
                     />
                   </Link>
                 </SheetHeader>
@@ -139,14 +139,14 @@ export function Navbar({
           {/* Center: Logo — flex-1 on mobile to center, flex-initial on desktop */}
           <Link
             href="/"
-            className="flex flex-1 items-center justify-center lg:flex-initial lg:justify-start lg:mr-6"
+            className="flex flex-1 items-center justify-center lg:flex-initial lg:justify-start lg:ml-6 lg:mr-8 transition-transform hover:scale-[1.02]"
           >
             <Image
               src={siteConfig.headerLogo}
               alt={siteConfig.name}
-              width={600}
-              height={180}
-              className="h-10 sm:h-11 lg:h-14 w-auto object-contain"
+              width={800}
+              height={320}
+              className="h-[140px] lg:h-40 w-auto object-contain origin-left"
               priority
             />
           </Link>
@@ -157,15 +157,15 @@ export function Navbar({
             <button
               type="button"
               onClick={openSearch}
-              className="flex h-10 w-full max-w-md items-center gap-2 rounded-full border border-border/80 bg-muted/40 px-4 text-sm text-muted-foreground transition-colors hover:bg-muted lg:w-80 xl:w-96"
+              className="flex h-11 w-full max-w-md items-center gap-3 rounded-full border border-border/50 bg-muted/40 px-5 text-sm text-muted-foreground shadow-sm transition-all hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:w-[360px] xl:w-[420px]"
             >
-              <Search className="size-4 shrink-0" />
+              <Search className="size-4 shrink-0 text-muted-foreground" />
               <span className="truncate">{t("nav.searchPlaceholder")}</span>
             </button>
           </div>
 
           {/* Right icons */}
-          <div className="flex shrink-0 items-center gap-1 sm:gap-2 lg:gap-3">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-4 lg:gap-5">
             {/* Desktop categories dropdown */}
             {categories.length > 0 && (
               <div className="group relative hidden lg:block">
@@ -204,23 +204,23 @@ export function Navbar({
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-9 text-foreground"
+                className="size-10 text-foreground hover:bg-muted"
                 aria-label={t("nav.account")}
               >
-                <User className="size-5" />
+                <User className="size-[22px]" />
               </Button>
             </Link>
 
             <Button
               variant="ghost"
               size="icon"
-              className="relative size-9 text-foreground"
+              className="relative size-10 text-foreground hover:bg-muted"
               aria-label={t("nav.cart")}
               onClick={openCart}
             >
-              <ShoppingBag className="size-5" />
+              <ShoppingBag className="size-[22px]" />
               {mounted && itemCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                <span className="absolute -right-0.5 -top-0.5 flex size-[18px] items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-sm">
                   {itemCount}
                 </span>
               )}
@@ -229,11 +229,11 @@ export function Navbar({
         </nav>
 
         {/* Mobile only: full-width pill search bar below header */}
-        <div className="px-4 pb-3 pt-1 md:hidden">
+        <div className="px-4 pb-4 md:hidden">
           <button
             type="button"
             onClick={openSearch}
-            className="flex w-full items-center gap-3 rounded-full border border-border/60 bg-muted/40 py-2.5 pl-4 pr-4 text-left text-sm text-muted-foreground transition-colors hover:bg-muted/60"
+            className="flex w-full items-center gap-3 rounded-full border border-border/50 bg-muted/30 py-3.5 pl-5 pr-5 text-left text-sm text-muted-foreground shadow-md transition-all hover:bg-muted/50 hover:shadow-lg"
           >
             <Search className="size-4 shrink-0 text-muted-foreground" />
             <span>{t("nav.searchPlaceholder")}</span>

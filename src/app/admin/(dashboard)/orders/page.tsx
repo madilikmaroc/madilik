@@ -9,15 +9,21 @@ export default async function AdminOrdersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold tracking-tight">Orders</h1>
-      <p className="mt-1 text-muted-foreground">
-        Manage COD orders from your store
-      </p>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold tracking-tight lg:text-3xl">
+          Orders
+        </h1>
+        <p className="mt-1 text-muted-foreground">
+          Manage COD orders from your store
+        </p>
+      </div>
 
-      <div className="mt-8 overflow-x-auto rounded-xl border bg-card">
+      <div className="overflow-x-auto rounded-xl border bg-card shadow-sm">
         {orders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-muted-foreground">No orders yet</p>
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <p className="text-lg font-medium text-muted-foreground">
+              No orders yet
+            </p>
             <p className="mt-1 text-sm text-muted-foreground">
               Orders will appear here when customers place them
             </p>
@@ -25,51 +31,72 @@ export default async function AdminOrdersPage() {
         ) : (
           <table className="w-full min-w-[800px] text-left text-sm">
             <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="px-4 py-3 font-medium">Reference</th>
-                <th className="px-4 py-3 font-medium">Customer</th>
-                <th className="px-4 py-3 font-medium">Phone</th>
-                <th className="px-4 py-3 font-medium">Location</th>
-                <th className="px-4 py-3 font-medium">Items</th>
-                <th className="px-4 py-3 font-medium">Total</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Date</th>
-                <th className="px-4 py-3 font-medium" />
+              <tr className="admin-table-header">
+                <th className="px-4 py-3.5">Reference</th>
+                <th className="px-4 py-3.5">Customer</th>
+                <th className="px-4 py-3.5">Phone</th>
+                <th className="px-4 py-3.5">Location</th>
+                <th className="px-4 py-3.5">Items</th>
+                <th className="px-4 py-3.5">Total</th>
+                <th className="px-4 py-3.5">Status</th>
+                <th className="px-4 py-3.5">Date</th>
+                <th className="px-4 py-3.5" />
               </tr>
             </thead>
             <tbody>
               {orders.map((order) => (
-                <tr key={order.id} className="border-b last:border-0 hover:bg-muted/30">
-                  <td className="px-4 py-3 font-mono text-xs">
+                <tr
+                  key={order.id}
+                  className="border-b last:border-0 transition-colors hover:bg-muted/40"
+                >
+                  <td className="px-4 py-3.5 font-mono text-xs font-medium">
                     {formatOrderReference(order.id)}
                   </td>
-                  <td className="px-4 py-3">{order.customerName}</td>
-                  <td className="px-4 py-3 text-muted-foreground">
+                  <td className="px-4 py-3.5 font-medium">
+                    {order.customerName}
+                  </td>
+                  <td className="px-4 py-3.5 text-muted-foreground">
                     {order.phone}
                   </td>
-                  <td className="max-w-[180px] truncate px-4 py-3 text-muted-foreground">
+                  <td className="max-w-[180px] truncate px-4 py-3.5 text-muted-foreground">
                     {order.location}
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {order.items.reduce((sum, i) => sum + i.quantity, 0)}
+                  <td className="px-4 py-3.5 text-muted-foreground">
+                    {order.items.reduce(
+                      (sum: number, i: { quantity: number }) =>
+                        sum + i.quantity,
+                      0
+                    )}
                   </td>
-                  <td className="px-4 py-3 font-medium">
-                    {formatPrice(order.total, order.locale as "en" | "fr" | "ar")}
+                  <td className="px-4 py-3.5 font-semibold">
+                    {formatPrice(
+                      order.total,
+                      order.locale as "en" | "fr" | "ar"
+                    )}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3.5">
                     <StatusBadge status={order.status} />
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">
+                  <td className="px-4 py-3.5 text-muted-foreground">
                     {new Date(order.createdAt).toLocaleDateString()}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3.5">
                     <div className="flex items-center gap-2">
                       <Link
                         href={`/admin/orders/${order.id}`}
-                        className="text-primary hover:underline"
+                        className="rounded-lg px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/5"
                       >
                         View
                       </Link>
+                      <a
+                        href={`/admin/orders/${order.id}/print`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-lg px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        title="Print order"
+                      >
+                        🖨️
+                      </a>
                       <DeleteOrderButton
                         orderId={order.id}
                         orderReference={formatOrderReference(order.id)}

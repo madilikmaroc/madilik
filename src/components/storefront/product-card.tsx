@@ -36,16 +36,15 @@ export function ProductCard({ product, className }: ProductCardProps) {
   return (
     <Link
       href={`/shop/${product.slug}`}
-      className={cn("group block", className)}
+      className={cn("group flex flex-col h-full overflow-hidden rounded-2xl border border-border/40 bg-card shadow-sm hover:shadow-lg transition-all duration-300", className)}
     >
-      <div className="relative overflow-hidden rounded-xl bg-muted transition-transform duration-300 group-hover:-translate-y-1 group-hover:shadow-xl">
-        <div className="relative aspect-square overflow-hidden">
+      <div className="relative overflow-hidden bg-muted aspect-[4/5]">
         {/* Product image or placeholder */}
         {product.images?.[0] ? (
           <img
             src={product.images[0]}
             alt={product.name}
-            className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="size-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
           />
         ) : (
           <div className="flex size-full items-center justify-center bg-gradient-to-br from-muted to-muted/60">
@@ -54,10 +53,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
             </span>
           </div>
         )}
-        </div>
-
-        {/* Badges */}
-        <div className="absolute left-2.5 top-2.5 flex flex-col gap-1.5">
+        <div className="absolute left-3 top-3 flex flex-col gap-1.5">
           {product.stock === 0 ? (
             <Badge variant="destructive" className="text-[10px] font-semibold uppercase tracking-wider">
               {t("stock.outOfStock")}
@@ -85,57 +81,46 @@ export function ProductCard({ product, className }: ProductCardProps) {
             </>
           )}
         </div>
-
-        {/* Desktop: Quick add button (slides up on hover) */}
-        <div className="absolute inset-x-0 bottom-0 translate-y-full p-3 transition-transform duration-300 group-hover:translate-y-0 hidden md:block">
-          <button
-            type="button"
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-lg transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
-            onClick={handleAddToCart}
-            disabled={product.stock === 0}
-          >
-            <ShoppingBag className="size-4" />
-            {t("product.addToCart")}
-          </button>
-        </div>
-
-        {/* Mobile: Quick add icon button (always visible, bottom-right corner) */}
-        {product.stock > 0 && (
-          <button
-            type="button"
-            className="absolute bottom-2 right-2 flex md:hidden size-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 transition-transform"
-            onClick={handleAddToCart}
-            aria-label={t("product.addToCart")}
-          >
-            <ShoppingBag className="size-4" />
-          </button>
-        )}
       </div>
 
-      <div className="mt-3 space-y-1 px-0.5">
-        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+      <div className="flex flex-col flex-grow p-4 space-y-2">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80">
           {product.category.name}
         </p>
-        <h3 className="line-clamp-1 text-sm font-medium leading-tight group-hover:text-primary transition-colors">
+        <h3 className="line-clamp-2 text-[15px] font-medium leading-snug group-hover:text-primary transition-colors flex-grow">
           {product.name}
         </h3>
-        <div className="flex items-center gap-2">
-          <Price value={product.price} className="text-sm font-bold" />
+        <div className="flex items-center gap-2 pt-1">
+          <Price value={product.price} className="text-base font-bold text-foreground" />
           {hasDiscount && (
             <Price
               value={product.compareAtPrice!}
-              className="text-xs text-muted-foreground line-through"
+              className="text-xs text-muted-foreground line-through font-medium"
             />
           )}
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 pb-2">
           <div className="flex items-center gap-0.5">
             <Star className="size-3.5 fill-amber-400 text-amber-400" />
-            <span className="text-xs font-medium">{product.rating}</span>
+            <span className="text-xs font-semibold">{product.rating}</span>
           </div>
-          <span className="text-[11px] text-muted-foreground">
-            {t("product.reviews", { count: product.reviewCount })}
+          <span className="text-[11px] text-muted-foreground font-medium">
+            ({product.reviewCount})
           </span>
+        </div>
+
+        {/* Mobile + Desktop Direct Add to Cart (Visible inline at bottom of card) */}
+        <div className="mt-auto w-full pt-2">
+          <button
+            type="button"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-[13px] font-bold text-primary-foreground shadow-sm transition-all duration-200 hover:bg-primary/90 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={handleAddToCart}
+            disabled={product.stock === 0}
+            aria-label={t("product.addToCart")}
+          >
+            <ShoppingBag className="size-[18px]" />
+            {t("product.addToCart")}
+          </button>
         </div>
       </div>
     </Link>

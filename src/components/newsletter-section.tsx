@@ -15,13 +15,13 @@ export function NewsletterSection({ title, subtitle }: NewsletterSectionProps) {
   const sectionSubtitle = subtitle || t("home.newsletterSubtitle");
 
   return (
-    <section className="border-t bg-muted/30">
+    <section className="border-t bg-gradient-to-b from-muted/40 to-background">
       <div className="container mx-auto px-4 py-16 md:py-24">
         <div className="mx-auto max-w-xl text-center">
-          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
             {sectionTitle}
           </h2>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
             {sectionSubtitle}
           </p>
           <form
@@ -31,14 +31,14 @@ export function NewsletterSection({ title, subtitle }: NewsletterSectionProps) {
             <input
               type="email"
               placeholder={t("home.newsletterPlaceholder")}
-              className="h-9 rounded-lg border border-input bg-background px-4 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-3 focus:ring-ring/50 sm:min-w-[300px]"
+              className="h-12 rounded-xl border border-input bg-background px-5 text-sm outline-none transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 sm:min-w-[320px]"
               required
             />
-            <Button type="submit" size="lg">
+            <Button type="submit" size="lg" className="h-12 rounded-xl px-8 text-sm font-bold shadow-md">
               {t("home.subscribe")}
             </Button>
           </form>
-          <p className="mt-3 text-xs text-muted-foreground">
+          <p className="mt-4 text-xs text-muted-foreground">
             {t("home.newsletterDisclaimer")}
           </p>
         </div>

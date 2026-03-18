@@ -98,7 +98,7 @@ export const ar: Messages = {
     details: "التفاصيل",
     shippingReturns: "الشحن والمرتجعات",
     freeShipping: "شحن مجاني",
-    freeShippingDetail: "شحن مجاني لجميع أنحاء المغرب. التوصيل خلال 3–5 أيام عمل.",
+    freeShippingDetail: "شحن مجاني لجميع أنحاء المغرب. التوصيل خلال 24 ساعة.",
     shippingReturnsContent:
       "شحن قياسي مجاني لجميع أنحاء المغرب. مرتجعات خلال 30 يوماً. القطع غير مستعملة.",
     relatedTitle: "قد يعجبك أيضاً",

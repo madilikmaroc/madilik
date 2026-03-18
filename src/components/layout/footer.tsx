@@ -84,7 +84,7 @@ export function Footer({ social }: FooterProps) {
                 alt={siteConfig.name}
                 width={500}
                 height={150}
-                className="h-10 sm:h-12 md:h-14 w-auto object-contain"
+                className="h-12 sm:h-14 md:h-16 w-auto object-contain"
                 unoptimized
               />
             </Link>
@@ -95,7 +95,7 @@ export function Footer({ social }: FooterProps) {
 
           {/* Links */}
           <div>
-            <h3 className="text-sm font-semibold tracking-wide">
+            <h3 className="text-sm font-bold uppercase tracking-wider">
               {t("footer.shop")}
             </h3>
             <ul className="mt-4 space-y-2.5">
@@ -113,7 +113,7 @@ export function Footer({ social }: FooterProps) {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold tracking-wide">
+            <h3 className="text-sm font-bold uppercase tracking-wider">
               {t("footer.company")}
             </h3>
             <ul className="mt-4 space-y-2.5">
@@ -131,7 +131,7 @@ export function Footer({ social }: FooterProps) {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold tracking-wide">
+            <h3 className="text-sm font-bold uppercase tracking-wider">
               {t("footer.support")}
             </h3>
             <ul className="mt-4 space-y-2.5">
@@ -167,7 +167,7 @@ export function Footer({ social }: FooterProps) {
                   aria-label="Facebook"
                   className="text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  <Facebook className="size-4" />
+                  <Facebook className="size-5" />
                 </Link>
               )}
               {social?.instagramEnabled && social.instagramUrl && (
@@ -178,7 +178,7 @@ export function Footer({ social }: FooterProps) {
                   aria-label="Instagram"
                   className="text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  <Instagram className="size-4" />
+                  <Instagram className="size-5" />
                 </Link>
               )}
               {social?.tiktokEnabled && social.tiktokUrl && (
@@ -189,7 +189,7 @@ export function Footer({ social }: FooterProps) {
                   aria-label="TikTok"
                   className="text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  <Music2 className="size-4" />
+                  <Music2 className="size-5" />
                 </Link>
               )}
               {whatsappHref && (
@@ -200,7 +200,7 @@ export function Footer({ social }: FooterProps) {
                   aria-label="WhatsApp"
                   className="text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  <MessageCircle className="size-4" />
+                  <MessageCircle className="size-5" />
                 </Link>
               )}
             </div>

@@ -105,15 +105,15 @@ export default function CheckoutPage() {
       {error && (
         <div
           role="alert"
-          className="mt-6 flex gap-3 rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-destructive"
+          className="mt-6 flex gap-3 rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-destructive shadow-sm"
         >
-          <p className="text-sm font-medium">{error}</p>
+          <p className="text-sm font-semibold">{error}</p>
         </div>
       )}
 
       <div className="mt-8 grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <div className="rounded-xl border bg-card p-6">
+          <div className="rounded-xl border bg-card p-6 shadow-sm">
             <CheckoutForm
               onSubmit={handleSubmit}
               isSubmitting={isSubmitting}

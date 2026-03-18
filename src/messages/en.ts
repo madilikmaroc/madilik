@@ -96,7 +96,7 @@ export const en = {
     details: "Details",
     shippingReturns: "Shipping & Returns",
     freeShipping: "Free shipping",
-    freeShippingDetail: "Free delivery across Morocco in 3–5 business days.",
+    freeShippingDetail: "Free delivery across Morocco in 24 hours.",
     shippingReturnsContent:
       "Free standard shipping everywhere in Morocco. 30-day hassle-free returns. Items must be unworn and in original condition.",
     relatedTitle: "You may also like",

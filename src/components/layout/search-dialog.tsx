@@ -97,12 +97,12 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
   return (
     <div className="fixed inset-0 z-[60]">
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative mx-auto mt-[10vh] w-[calc(100%-2rem)] max-w-lg">
-        <div className="overflow-hidden rounded-xl border bg-background shadow-2xl">
-          <div className="flex items-center gap-3 border-b px-4">
+      <div className="relative mx-auto mt-[8vh] w-[calc(100%-2rem)] max-w-xl">
+        <div className="overflow-hidden rounded-2xl border bg-background shadow-2xl">
+          <div className="flex items-center gap-3 border-b px-5">
             <Search className="size-5 shrink-0 text-muted-foreground" />
             <input
               ref={inputRef}
@@ -110,7 +110,7 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search products..."
-              className="h-12 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+              className="h-14 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground"
             />
             {loading && (
               <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
@@ -118,17 +118,19 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md p-1 text-muted-foreground hover:text-foreground"
+              className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <X className="size-4" />
             </button>
           </div>
 
           {query.length >= 2 && (
-            <div className="max-h-[50vh] overflow-y-auto">
+            <div className="max-h-[50vh] overflow-y-auto scrollbar-thin">
               {results.length === 0 && !loading ? (
-                <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-                  No products found for "{query}"
+                <div className="px-6 py-12 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    No products found for &ldquo;{query}&rdquo;
+                  </p>
                 </div>
               ) : (
                 <ul className="divide-y">
@@ -137,9 +139,9 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
                       <Link
                         href={`/shop/${r.slug}`}
                         onClick={onClose}
-                        className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted"
+                        className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/60"
                       >
-                        <div className="size-12 shrink-0 overflow-hidden rounded-lg bg-muted">
+                        <div className="size-14 shrink-0 overflow-hidden rounded-xl bg-muted">
                           {r.image ? (
                             <img
                               src={r.image}
@@ -147,7 +149,7 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
                               className="size-full object-cover"
                             />
                           ) : (
-                            <div className="flex size-full items-center justify-center text-lg text-muted-foreground/40">
+                            <div className="flex size-full items-center justify-center text-lg font-medium text-muted-foreground/40">
                               {r.name.charAt(0)}
                             </div>
                           )}
@@ -156,7 +158,7 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
                           <p className="truncate text-sm font-medium">
                             {r.name}
                           </p>
-                          <p className="text-sm font-semibold text-primary">
+                          <p className="mt-0.5 text-sm font-bold text-foreground">
                             {formatPrice(r.price, locale as "en" | "fr" | "ar")}
                           </p>
                         </div>

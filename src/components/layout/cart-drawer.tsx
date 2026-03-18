@@ -71,12 +71,12 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b px-4 py-4">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between border-b px-5 py-5">
+          <div className="flex items-center gap-2.5">
             <ShoppingBag className="size-5" />
-            <h2 className="font-semibold">{t("cart.title")}</h2>
+            <h2 className="text-lg font-bold">{t("cart.title")}</h2>
             {mounted && items.length > 0 && (
-              <span className="flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+              <span className="flex size-6 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
                 {items.length}
               </span>
             )}
@@ -84,7 +84,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="rounded-xl p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <X className="size-5" />
           </button>
@@ -107,8 +107,8 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
           ) : (
             <ul className="divide-y">
               {items.map((item) => (
-                <li key={item.product.id} className="flex gap-3 px-4 py-4">
-                  <div className="size-16 shrink-0 overflow-hidden rounded-lg bg-muted">
+                <li key={item.product.id} className="flex gap-4 px-5 py-4">
+                  <div className="size-[72px] shrink-0 overflow-hidden rounded-xl bg-muted">
                     {item.product.images?.[0] ? (
                       <img
                         src={item.product.images[0]}
@@ -116,7 +116,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                         className="size-full object-cover"
                       />
                     ) : (
-                      <div className="flex size-full items-center justify-center text-lg text-muted-foreground/40">
+                      <div className="flex size-full items-center justify-center text-lg font-medium text-muted-foreground/40">
                         {item.product.category?.name?.charAt(0) ?? "P"}
                       </div>
                     )}
@@ -125,41 +125,41 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                     <Link
                       href={`/shop/${item.product.slug}`}
                       onClick={onClose}
-                      className="text-sm font-medium hover:underline line-clamp-1"
+                      className="text-[15px] font-medium hover:underline line-clamp-2 leading-snug"
                     >
                       {item.product.name}
                     </Link>
-                    <p className="mt-0.5 text-sm font-semibold">
+                    <p className="mt-1 text-sm font-bold">
                       {formatPrice(item.product.price * item.quantity, loc)}
                     </p>
-                    <div className="mt-2 flex items-center gap-2">
-                      <div className="inline-flex items-center rounded-lg border">
+                    <div className="mt-2.5 flex items-center gap-3">
+                      <div className="inline-flex items-center rounded-xl border bg-muted/30">
                         <button
                           type="button"
                           onClick={() => decrementItem(item.product.id)}
-                          className="px-2 py-1 text-muted-foreground hover:text-foreground disabled:opacity-50"
+                          className="px-2.5 py-1.5 text-muted-foreground hover:text-foreground disabled:opacity-50"
                           disabled={item.quantity <= 1}
                         >
-                          <Minus className="size-3" />
+                          <Minus className="size-3.5" />
                         </button>
-                        <span className="min-w-[1.5rem] text-center text-xs font-medium tabular-nums">
+                        <span className="min-w-[2rem] text-center text-sm font-semibold tabular-nums">
                           {item.quantity}
                         </span>
                         <button
                           type="button"
                           onClick={() => incrementItem(item.product.id)}
-                          className="px-2 py-1 text-muted-foreground hover:text-foreground disabled:opacity-50"
+                          className="px-2.5 py-1.5 text-muted-foreground hover:text-foreground disabled:opacity-50"
                           disabled={item.quantity >= item.product.stock}
                         >
-                          <Plus className="size-3" />
+                          <Plus className="size-3.5" />
                         </button>
                       </div>
                       <button
                         type="button"
                         onClick={() => removeItem(item.product.id)}
-                        className="rounded-md p-1 text-muted-foreground hover:text-destructive"
+                        className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                       >
-                        <Trash2 className="size-3.5" />
+                        <Trash2 className="size-4" />
                       </button>
                     </div>
                   </div>
@@ -171,31 +171,34 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
 
         {/* Footer */}
         {mounted && items.length > 0 && (
-          <div className="border-t px-4 py-4">
-            <div className="space-y-1.5 text-sm">
+          <div className="border-t px-5 py-5">
+            <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t("cart.subtotal")}</span>
-                <span>{formatPrice(subtotal, loc)}</span>
+                <span className="font-medium">{formatPrice(subtotal, loc)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t("cart.shipping")}</span>
-                <span className="text-green-600">{t("cart.free")}</span>
+                <span className="font-medium text-green-600">{t("cart.free")}</span>
               </div>
             </div>
-            <Separator className="my-3" />
-            <div className="flex justify-between font-semibold">
+            <Separator className="my-4" />
+            <div className="flex justify-between text-base font-bold">
               <span>{t("cart.total")}</span>
               <span>{formatPrice(total, loc)}</span>
             </div>
             <Link href="/checkout" onClick={onClose} className="block">
-              <Button className="mt-4 w-full" size="lg">
+              <Button className="mt-5 w-full text-[15px] font-bold shadow-md" size="lg">
                 {t("cart.checkout")}
               </Button>
             </Link>
+            <p className="mt-3 text-center text-[11px] text-muted-foreground">
+              🔒 Secure checkout · Free shipping
+            </p>
             <Link
               href="/cart"
               onClick={onClose}
-              className="mt-2 block text-center text-sm text-muted-foreground hover:text-foreground"
+              className="mt-2 block text-center text-sm font-medium text-muted-foreground hover:text-foreground"
             >
               {t("cart.continueShopping")}
             </Link>

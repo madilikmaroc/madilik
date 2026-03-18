@@ -98,7 +98,7 @@ export const fr: Messages = {
     details: "Détails",
     shippingReturns: "Livraison & Retours",
     freeShipping: "Livraison gratuite",
-    freeShippingDetail: "Livraison gratuite partout au Maroc sous 3–5 jours ouvrés.",
+    freeShippingDetail: "Livraison gratuite partout au Maroc sous 24 heures.",
     shippingReturnsContent:
       "Livraison standard gratuite partout au Maroc. Retours sous 30 jours. Articles neufs et non portés.",
     relatedTitle: "Vous aimerez aussi",

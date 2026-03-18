@@ -46,7 +46,7 @@ export function ProductPageContent({
           },
           { label: product.name },
         ]}
-        className="mb-6"
+        className="mb-8"
       />
 
       <div className="grid gap-6 md:gap-8 lg:grid-cols-2 lg:gap-12">
@@ -56,11 +56,11 @@ export function ProductPageContent({
         />
 
         <div>
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
+          <div className="space-y-4">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               {product.category.name}
             </p>
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
               {product.name}
             </h1>
             <div className="flex flex-wrap items-center gap-3">
@@ -84,13 +84,18 @@ export function ProductPageContent({
             </div>
           </div>
 
-          <div className="mt-4 flex items-baseline gap-3">
-            <Price value={product.price} className="text-2xl font-bold" />
+          <div className="mt-5 flex items-baseline gap-3">
+            <Price value={product.price} className="text-3xl font-bold" />
             {product.compareAtPrice && (
-              <Price
-                value={product.compareAtPrice}
-                className="text-lg text-muted-foreground line-through"
-              />
+              <>
+                <Price
+                  value={product.compareAtPrice}
+                  className="text-lg text-muted-foreground line-through"
+                />
+                <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-600">
+                  -{Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)}%
+                </span>
+              </>
             )}
           </div>
 
@@ -121,10 +126,10 @@ export function ProductPageContent({
             )}
           </div>
 
-          <div className="mt-6 flex items-center gap-2 rounded-lg border bg-muted/50 p-4">
-            <Truck className="size-5 shrink-0 text-muted-foreground" />
+          <div className="mt-6 flex items-center gap-2 rounded-xl border bg-muted/30 p-4">
+            <Truck className="size-5 shrink-0 text-primary" />
             <div className="text-sm">
-              <p className="font-medium">{t("product.freeShipping")}</p>
+              <p className="font-semibold">{t("product.freeShipping")}</p>
               <p className="text-muted-foreground">
                 {t("product.freeShippingDetail")}
               </p>
@@ -134,22 +139,22 @@ export function ProductPageContent({
       </div>
 
       <div className="mt-16 border-t">
-        <div className="grid gap-8 py-12 md:grid-cols-3">
-          <div>
-            <h3 className="font-semibold">{t("product.description")}</h3>
-            <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+        <div className="grid gap-6 py-12 md:grid-cols-3">
+          <div className="rounded-xl border bg-card p-6">
+            <h3 className="text-base font-bold">{t("product.description")}</h3>
+            <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
               {product.description}
             </p>
           </div>
-          <div>
-            <h3 className="font-semibold">{t("product.details")}</h3>
-            <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+          <div className="rounded-xl border bg-card p-6">
+            <h3 className="text-base font-bold">{t("product.details")}</h3>
+            <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
               {product.details}
             </p>
           </div>
-          <div>
-            <h3 className="font-semibold">{t("product.shippingReturns")}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          <div className="rounded-xl border bg-card p-6">
+            <h3 className="text-base font-bold">{t("product.shippingReturns")}</h3>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
               {t("product.shippingReturnsContent")}
             </p>
           </div>
