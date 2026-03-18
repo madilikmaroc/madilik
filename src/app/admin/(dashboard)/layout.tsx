@@ -1,0 +1,108 @@
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingBag,
+  FolderTree,
+  Star,
+  FileText,
+  LogOut,
+  Menu,
+} from "lucide-react";
+
+import { isAdminAuthenticated } from "@/lib/auth/admin-session";
+import { logoutAction } from "@/app/admin/login/actions";
+
+const navItems = [
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/orders", label: "Orders", icon: Package },
+  { href: "/admin/products", label: "Products", icon: ShoppingBag },
+  { href: "/admin/categories", label: "Categories", icon: FolderTree },
+  { href: "/admin/reviews", label: "Reviews", icon: Star },
+  { href: "/admin/content", label: "Content", icon: FileText },
+  { href: "/admin/settings/store", label: "Settings", icon: FileText },
+];
+
+export default async function AdminDashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const authenticated = await isAdminAuthenticated();
+  if (!authenticated) {
+    redirect("/admin/login");
+  }
+
+  return (
+    <div className="min-h-screen bg-muted/30">
+      {/* Mobile top bar */}
+      <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background px-4 md:hidden">
+        <Link href="/admin" className="font-semibold">
+          Madilik Admin
+        </Link>
+        <label
+          htmlFor="admin-nav-toggle"
+          className="cursor-pointer rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <Menu className="size-5" />
+        </label>
+      </div>
+
+      <input type="checkbox" id="admin-nav-toggle" className="peer hidden" />
+
+      {/* Sidebar overlay for mobile */}
+      <label
+        htmlFor="admin-nav-toggle"
+        className="fixed inset-0 z-30 hidden bg-black/40 peer-checked:block md:!hidden"
+      />
+
+      {/* Sidebar */}
+      <aside className="fixed inset-y-0 left-0 z-40 w-56 shrink-0 -translate-x-full border-r bg-background transition-transform duration-200 peer-checked:translate-x-0 md:translate-x-0">
+        <div className="hidden h-16 items-center border-b px-6 md:flex">
+          <Link href="/admin" className="font-semibold">
+            Madilik Admin
+          </Link>
+        </div>
+        <div className="flex h-14 items-center justify-between border-b px-6 md:hidden">
+          <Link href="/admin" className="font-semibold">
+            Madilik Admin
+          </Link>
+          <label
+            htmlFor="admin-nav-toggle"
+            className="cursor-pointer rounded-lg p-1 text-muted-foreground hover:text-foreground"
+          >
+            ✕
+          </label>
+        </div>
+        <nav className="flex flex-col gap-1 p-4">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <item.icon className="size-4" />
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        <div className="absolute bottom-4 left-4 right-4 space-y-3">
+          <form action={logoutAction}>
+            <button
+              type="submit"
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <LogOut className="size-4" />
+              Log out
+            </button>
+          </form>
+        </div>
+      </aside>
+
+      <main className="min-w-0 md:pl-56">
+        <div className="container py-6 md:py-8">{children}</div>
+      </main>
+    </div>
+  );
+}
