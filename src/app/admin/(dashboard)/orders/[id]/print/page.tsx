@@ -11,326 +11,264 @@ interface PrintPageProps {
 export default async function OrderPrintPage({ params }: PrintPageProps) {
   const { id } = await params;
   const order = await getOrderById(id);
-
   if (!order) notFound();
 
-  const orderReference = formatOrderReference(order.id);
+  const ref = formatOrderReference(order.id);
   const loc = order.locale as "en" | "fr" | "ar";
-  const orderDate = new Date(order.createdAt).toLocaleDateString("en-GB", {
+  const date = new Date(order.createdAt).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
     year: "numeric",
-    month: "long",
-    day: "numeric",
   });
+  const totalItems = order.items.reduce((s, i) => s + i.quantity, 0);
 
   return (
     <>
       <OrderPrintClient />
-      <div className="print-page">
-        <style>{`
-          @media print {
-            @page {
-              size: A4;
-              margin: 15mm;
-            }
-            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          }
-          .print-page {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 40px 32px;
-            color: #1F2A37;
-            background: #fff;
-          }
-          .print-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            border-bottom: 3px solid #1F2A37;
-            padding-bottom: 20px;
-            margin-bottom: 24px;
-          }
-          .print-brand h1 {
-            font-size: 28px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            margin: 0;
-          }
-          .print-brand p {
-            font-size: 12px;
-            color: #5a6270;
-            margin: 4px 0 0 0;
-          }
-          .print-meta {
-            text-align: right;
-            font-size: 13px;
-          }
-          .print-meta .ref {
-            font-size: 18px;
-            font-weight: 700;
-            font-family: monospace;
-          }
-          .print-meta .date { color: #5a6270; margin-top: 4px; }
-          .print-meta .status {
-            display: inline-block;
-            margin-top: 6px;
-            padding: 3px 12px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            background: #f0f0f0;
-            border: 1px solid #ddd;
-          }
 
-          .print-customer-box {
-            border: 2px solid #1F2A37;
-            border-radius: 10px;
-            padding: 20px 24px;
-            margin-bottom: 24px;
-            background: #fafaf8;
-          }
-          .print-customer-box h2 {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: #5a6270;
-            margin: 0 0 12px 0;
-            border-bottom: 1px solid #e5e1d8;
-            padding-bottom: 8px;
-          }
-          .print-customer-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px 32px;
-          }
-          .print-customer-grid .full { grid-column: 1 / -1; }
-          .print-customer-grid dt {
-            font-size: 10px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: #888;
-            margin-bottom: 2px;
-          }
-          .print-customer-grid dd {
-            font-size: 15px;
-            font-weight: 600;
-            margin: 0;
-          }
+      {/* ── All styles are inline so nothing leaks from the website ── */}
+      <style>{`
+        @media print {
+          @page { size: A5; margin: 10mm; }
+          body { background: #fff !important; }
+          .no-print { display: none !important; }
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; color: #111; }
 
-          .print-payment-box {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 16px;
-            margin-bottom: 24px;
-            border-radius: 8px;
-            border: 1px dashed #C9A227;
-            background: #fdf8e8;
-            font-size: 13px;
-            font-weight: 600;
-          }
-          .print-payment-box .cod-badge {
-            background: #1F2A37;
-            color: #F2D675;
-            padding: 3px 10px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-          }
+        .slip {
+          max-width: 520px;
+          margin: 24px auto;
+          background: #fff;
+          border: 2px solid #222;
+          border-radius: 6px;
+          overflow: hidden;
+        }
+        @media screen { .slip { box-shadow: 0 4px 24px rgba(0,0,0,.12); } }
 
-          .print-items { margin-bottom: 24px; }
-          .print-items h2 {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: #5a6270;
-            margin: 0 0 10px 0;
-          }
-          .print-items table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-          }
-          .print-items thead th {
-            text-align: left;
-            padding: 8px 12px;
-            background: #1F2A37;
-            color: #F2D675;
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-          }
-          .print-items thead th:first-child { border-radius: 6px 0 0 6px; }
-          .print-items thead th:last-child { border-radius: 0 6px 6px 0; text-align: right; }
-          .print-items thead th.right { text-align: right; }
-          .print-items tbody td {
-            padding: 10px 12px;
-            border-bottom: 1px solid #eee;
-          }
-          .print-items tbody td.right { text-align: right; }
-          .print-items tbody tr:last-child td { border-bottom: none; }
+        /* ── Header row ── */
+        .slip-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 14px 20px;
+          background: #111;
+          color: #fff;
+        }
+        .slip-header .brand { font-size: 18px; font-weight: 800; letter-spacing: .5px; }
+        .slip-header .ref { font-family: monospace; font-size: 14px; font-weight: 700; }
+        .slip-header .date { font-size: 11px; opacity: .7; margin-top: 2px; text-align: right; }
 
-          .print-totals {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 24px;
-          }
-          .print-totals table {
-            min-width: 260px;
-            border-collapse: collapse;
-            font-size: 13px;
-          }
-          .print-totals td {
-            padding: 6px 0;
-          }
-          .print-totals td:last-child { text-align: right; font-weight: 500; }
-          .print-totals .total-row td {
-            padding-top: 10px;
-            border-top: 2px solid #1F2A37;
-            font-size: 16px;
-            font-weight: 700;
-          }
+        /* ── Customer box (most prominent) ── */
+        .ship-to {
+          border: 2px dashed #333;
+          margin: 16px;
+          padding: 16px 18px;
+          border-radius: 6px;
+        }
+        .ship-to-label {
+          font-size: 9px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 2px;
+          color: #666;
+          margin-bottom: 10px;
+        }
+        .ship-to .name {
+          font-size: 20px;
+          font-weight: 800;
+          line-height: 1.2;
+          margin-bottom: 6px;
+        }
+        .ship-to .phone {
+          font-size: 16px;
+          font-weight: 700;
+          font-family: monospace;
+          margin-bottom: 6px;
+        }
+        .ship-to .address {
+          font-size: 13px;
+          line-height: 1.4;
+          color: #333;
+        }
 
-          .print-notes {
-            border: 1px solid #e5e1d8;
-            border-radius: 8px;
-            padding: 16px 20px;
-            margin-bottom: 24px;
-          }
-          .print-notes h2 {
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #888;
-            margin: 0 0 8px 0;
-          }
-          .print-notes .note-area {
-            min-height: 50px;
-            border-bottom: 1px dashed #ccc;
-          }
+        /* ── COD box ── */
+        .cod-box {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin: 0 16px 16px;
+          padding: 12px 18px;
+          border: 2px solid #111;
+          border-radius: 6px;
+          background: #f9f9f6;
+        }
+        .cod-box .label {
+          font-size: 11px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+        .cod-box .badge {
+          display: inline-block;
+          background: #111;
+          color: #fff;
+          padding: 3px 10px;
+          border-radius: 4px;
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: .5px;
+          margin-right: 8px;
+        }
+        .cod-box .amount {
+          font-size: 22px;
+          font-weight: 900;
+          font-family: monospace;
+        }
 
-          .print-footer {
-            text-align: center;
-            font-size: 11px;
-            color: #999;
-            border-top: 1px solid #e5e1d8;
-            padding-top: 16px;
-          }
+        /* ── Items table ── */
+        .items-section {
+          margin: 0 16px 12px;
+        }
+        .items-section .section-title {
+          font-size: 9px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 2px;
+          color: #666;
+          margin-bottom: 6px;
+        }
+        .items-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 12px;
+        }
+        .items-table th {
+          text-align: left;
+          padding: 6px 8px;
+          background: #eee;
+          font-size: 9px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: .5px;
+          border-bottom: 1px solid #ccc;
+        }
+        .items-table th.r { text-align: right; }
+        .items-table td {
+          padding: 6px 8px;
+          border-bottom: 1px solid #eee;
+        }
+        .items-table td.r { text-align: right; }
+        .items-table .total-row td {
+          border-top: 2px solid #111;
+          border-bottom: none;
+          font-weight: 800;
+          padding-top: 8px;
+          font-size: 13px;
+        }
 
-          @media screen {
-            body { background: #f5f5f5; }
-            .print-page {
-              box-shadow: 0 2px 20px rgba(0,0,0,0.08);
-              border-radius: 8px;
-              margin: 32px auto;
-            }
-          }
-        `}</style>
+        /* ── Notes ── */
+        .notes {
+          margin: 0 16px 16px;
+          padding: 10px 14px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          min-height: 40px;
+        }
+        .notes .notes-title {
+          font-size: 9px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          color: #999;
+          margin-bottom: 4px;
+        }
 
-        {/* Header */}
-        <div className="print-header">
-          <div className="print-brand">
-            <h1>{siteConfig.name}</h1>
-            <p>Order / Shipping Slip</p>
-          </div>
-          <div className="print-meta">
-            <div className="ref">{orderReference}</div>
-            <div className="date">{orderDate}</div>
-            <div>
-              <span className="status">{order.status}</span>
-            </div>
+        /* ── Footer ── */
+        .slip-footer {
+          padding: 8px 20px;
+          background: #f5f5f5;
+          text-align: center;
+          font-size: 10px;
+          color: #999;
+          border-top: 1px solid #ddd;
+        }
+
+        /* ── Cut line ── */
+        .cut-line {
+          margin: 0 16px 12px;
+          border: none;
+          border-top: 1px dashed #ccc;
+        }
+      `}</style>
+
+      <div className="slip">
+        {/* ▸ Header: brand + reference + date */}
+        <div className="slip-header">
+          <span className="brand">{siteConfig.name}</span>
+          <div style={{ textAlign: "right" }}>
+            <div className="ref">{ref}</div>
+            <div className="date">{date}</div>
           </div>
         </div>
 
-        {/* Customer info — prominent */}
-        <div className="print-customer-box">
-          <h2>📦 Ship To</h2>
-          <dl className="print-customer-grid">
-            <div>
-              <dt>Customer Name</dt>
-              <dd>{order.customerName}</dd>
-            </div>
-            <div>
-              <dt>Phone Number</dt>
-              <dd>{order.phone}</dd>
-            </div>
-            <div className="full">
-              <dt>Delivery Address / Location</dt>
-              <dd>{order.location}</dd>
-            </div>
-          </dl>
+        {/* ▸ SHIP TO – most prominent */}
+        <div className="ship-to">
+          <div className="ship-to-label">📦 Ship To</div>
+          <div className="name">{order.customerName}</div>
+          <div className="phone">📞 {order.phone}</div>
+          <div className="address">📍 {order.location}</div>
         </div>
 
-        {/* Payment method */}
-        <div className="print-payment-box">
-          <span className="cod-badge">COD</span>
-          <span>Payment: Cash on Delivery — Collect {formatPrice(order.total, loc)} on delivery</span>
+        {/* ▸ COD Payment */}
+        <div className="cod-box">
+          <div>
+            <span className="badge">COD</span>
+            <span className="label">Cash on Delivery</span>
+          </div>
+          <div className="amount">{formatPrice(order.total, loc)}</div>
         </div>
 
-        {/* Order items */}
-        <div className="print-items">
-          <h2>Order Items</h2>
-          <table>
+        <hr className="cut-line" />
+
+        {/* ▸ Items (compact) */}
+        <div className="items-section">
+          <div className="section-title">
+            Order Items ({totalItems} item{totalItems !== 1 ? "s" : ""})
+          </div>
+          <table className="items-table">
             <thead>
               <tr>
-                <th>#</th>
                 <th>Product</th>
-                <th className="right">Qty</th>
-                <th className="right">Unit Price</th>
-                <th>Line Total</th>
+                <th className="r">Qty</th>
+                <th className="r">Price</th>
               </tr>
             </thead>
             <tbody>
-              {order.items.map((item, idx) => (
+              {order.items.map((item) => (
                 <tr key={item.id}>
-                  <td>{idx + 1}</td>
                   <td>{item.productName}</td>
-                  <td className="right">{item.quantity}</td>
-                  <td className="right">{formatPrice(item.unitPrice, loc)}</td>
-                  <td className="right">{formatPrice(item.lineTotal, loc)}</td>
+                  <td className="r">{item.quantity}</td>
+                  <td className="r">{formatPrice(item.lineTotal, loc)}</td>
                 </tr>
               ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Totals */}
-        <div className="print-totals">
-          <table>
-            <tbody>
-              <tr>
-                <td>Subtotal</td>
-                <td>{formatPrice(order.subtotal, loc)}</td>
-              </tr>
-              <tr>
-                <td>Shipping</td>
-                <td>{order.shippingCost === 0 ? "Free" : formatPrice(order.shippingCost, loc)}</td>
-              </tr>
               <tr className="total-row">
-                <td>Total (COD)</td>
-                <td>{formatPrice(order.total, loc)}</td>
+                <td>Total</td>
+                <td className="r">{totalItems}</td>
+                <td className="r">{formatPrice(order.total, loc)}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        {/* Notes area */}
-        <div className="print-notes">
-          <h2>Internal Notes</h2>
-          <div className="note-area" />
+        {/* ▸ Internal notes area */}
+        <div className="notes">
+          <div className="notes-title">Notes</div>
         </div>
 
-        {/* Footer */}
-        <div className="print-footer">
-          <p>{siteConfig.name} — {siteConfig.url} — {orderReference}</p>
+        {/* ▸ Footer */}
+        <div className="slip-footer">
+          {siteConfig.name} &middot; {ref} &middot; {date}
         </div>
       </div>
     </>
