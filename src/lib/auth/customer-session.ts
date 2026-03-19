@@ -15,11 +15,14 @@ const rawSecret = process.env.SESSION_SECRET?.trim() ?? "";
 const SESSION_SECRET =
   rawSecret.length >= MIN_SECRET_LENGTH ? rawSecret : FALLBACK_SECRET;
 
+/** Only set secure cookies when the app is served over HTTPS */
+const isHttps = (process.env.NEXT_PUBLIC_APP_URL ?? "").startsWith("https");
+
 const SESSION_OPTIONS = {
   password: SESSION_SECRET,
   cookieName: "madilik_customer_session",
   cookieOptions: {
-    secure: process.env.NODE_ENV === "production",
+    secure: isHttps,
     httpOnly: true,
     maxAge: 60 * 60 * 24 * 30, // 30 days
     sameSite: "lax" as const,
