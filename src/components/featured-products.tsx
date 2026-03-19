@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Truck, ShieldCheck, Headphones } from "lucide-react";
+import { ArrowRight, Truck, Banknote, Headphones } from "lucide-react";
 
 import type { ProductDisplay } from "@/types/product";
 import { useLanguage } from "@/contexts/language-context";
@@ -37,11 +37,11 @@ export function FeaturedProducts({ products, title, subtitle }: FeaturedProducts
           </div>
           <div className="flex items-center gap-3 py-4 sm:justify-center sm:py-5">
             <div className="trust-icon-box shrink-0">
-              <ShieldCheck className="size-5" />
+              <Banknote className="size-5" />
             </div>
             <div>
-              <p className="text-sm font-semibold">{t("home.trustSecurePayment") || "Secure Payment"}</p>
-              <p className="text-xs text-muted-foreground">{t("home.trustSecurePaymentDetail") || "100% protected checkout"}</p>
+              <p className="text-sm font-semibold">{t("home.trustCashOnDelivery")}</p>
+              <p className="text-xs text-muted-foreground">{t("home.trustCashOnDeliveryDetail")}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 py-4 sm:justify-center sm:py-5">
