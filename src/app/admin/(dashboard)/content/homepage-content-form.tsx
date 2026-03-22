@@ -138,20 +138,33 @@ export function HomepageContentForm({ content }: Props) {
       const result = await uploadImageViaAdminApi(file, "banner");
       if ("error" in result) {
         setError(result.error);
+        setBannerPickPreview(null);
+        if (bannerBlobRef.current) {
+          URL.revokeObjectURL(bannerBlobRef.current);
+          bannerBlobRef.current = null;
+        }
       } else {
         updateField("bannerImage", result.url);
         setUploadOk(true);
         window.setTimeout(() => setUploadOk(false), 4000);
+        // Keep blob preview briefly so there's no flash while the server path loads
+        window.setTimeout(() => {
+          setBannerPickPreview(null);
+          if (bannerBlobRef.current) {
+            URL.revokeObjectURL(bannerBlobRef.current);
+            bannerBlobRef.current = null;
+          }
+        }, 500);
       }
     } catch {
       setError("Upload failed. Please try again.");
-    } finally {
-      setUploading(false);
       setBannerPickPreview(null);
       if (bannerBlobRef.current) {
         URL.revokeObjectURL(bannerBlobRef.current);
         bannerBlobRef.current = null;
       }
+    } finally {
+      setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
     }
   }

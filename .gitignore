@@ -17,9 +17,15 @@
 /.next/
 /out/
 
-# User uploads (keep folder via .gitkeep only)
-/public/uploads/**
-!/public/uploads/**/.gitkeep
+# User uploads (keep folder structure via .gitkeep, ignore actual uploaded files)
+/public/uploads/products/*
+!/public/uploads/products/.gitkeep
+/public/uploads/banners/*
+!/public/uploads/banners/.gitkeep
+/public/uploads/categories/*
+!/public/uploads/categories/.gitkeep
+/public/uploads/reviews/*
+!/public/uploads/reviews/.gitkeep
 
 # production
 /build

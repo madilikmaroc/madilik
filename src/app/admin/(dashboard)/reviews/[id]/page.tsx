@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Star } from "lucide-react";
 import { getAdminReviewById } from "@/lib/data/admin-reviews";
+import { normalizeMediaSrc } from "@/lib/media-url";
 import { Badge } from "@/components/ui/badge";
 import { ReviewDetailActions } from "./review-detail-actions";
 
@@ -91,21 +92,25 @@ export default async function AdminReviewDetailPage({
               <div className="mt-6">
                 <h2 className="font-semibold">Screenshots</h2>
                 <div className="mt-3 flex flex-wrap gap-3">
-                  {review.images.map((url) => (
-                    <a
-                      key={url}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block"
-                    >
-                      <img
-                        src={url}
-                        alt=""
-                        className="h-24 w-24 rounded-lg border object-cover hover:opacity-90"
-                      />
-                    </a>
-                  ))}
+                  {review.images.map((url) => {
+                    const src = normalizeMediaSrc(url);
+                    if (!src) return null;
+                    return (
+                      <a
+                        key={url}
+                        href={src}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block"
+                      >
+                        <img
+                          src={src}
+                          alt=""
+                          className="h-24 w-24 rounded-lg border object-cover hover:opacity-90"
+                        />
+                      </a>
+                    );
+                  })}
                 </div>
               </div>
             )}

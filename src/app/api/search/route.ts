@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { normalizeMediaSrc } from "@/lib/media-url";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -35,7 +36,7 @@ export async function GET(request: Request) {
       name: p.name,
       slug: p.slug,
       price: p.price,
-      image: p.images[0]?.url ?? null,
+      image: normalizeMediaSrc(p.images[0]?.url) || null,
     }))
   );
 }

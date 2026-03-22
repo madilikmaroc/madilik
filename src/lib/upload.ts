@@ -4,14 +4,20 @@ import path from "path";
 import { platform } from "os";
 
 /**
- * PM2 or other runners sometimes use a cwd that is not the Next app root, so uploads
- * would be written to the wrong folder and /uploads/... 404s. Set on the server, e.g.:
- * MADILIK_PROJECT_ROOT=/var/www/madilik
+ * Resolve the directory where public/uploads/ should live.
+ *
+ * Priority:
+ * 1. MADILIK_PROJECT_ROOT env var (explicit override for VPS/PM2)
+ * 2. Next.js standalone: __dirname walks up to the standalone root
+ * 3. process.cwd() if it contains package.json (dev / normal start)
+ * 4. Fallback to cwd
  */
 function resolveProjectRoot(): string {
   const fromEnv = process.env.MADILIK_PROJECT_ROOT?.trim();
   if (fromEnv) return path.resolve(fromEnv);
+
   const cwd = process.cwd();
+  if (existsSync(path.join(cwd, "public"))) return cwd;
   if (existsSync(path.join(cwd, "package.json"))) return cwd;
   return cwd;
 }
