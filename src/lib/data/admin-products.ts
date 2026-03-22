@@ -1,4 +1,11 @@
 import { prisma } from "@/lib/db";
+import { normalizeMediaSrc } from "@/lib/media-url";
+
+function sanitizeImageUrls(urls: string[]) {
+  return urls
+    .map((u) => normalizeMediaSrc(u.trim()))
+    .filter((u) => u.length > 0);
+}
 
 const productInclude = {
   category: { select: { id: true, name: true, slug: true } },
@@ -45,13 +52,12 @@ export async function createProduct(data: {
   imageUrls: string[];
 }) {
   const { imageUrls, ...productData } = data;
+  const cleanUrls = sanitizeImageUrls(imageUrls);
   return prisma.product.create({
     data: {
       ...productData,
       images: {
-        create: imageUrls
-          .filter((url) => url.trim())
-          .map((url, index) => ({ url: url.trim(), order: index })),
+        create: cleanUrls.map((url, index) => ({ url, order: index })),
       },
     },
     include: productInclude,
@@ -79,7 +85,7 @@ export async function updateProduct(
   }
 ) {
   const { imageUrls, ...productData } = data;
-  const validUrls = imageUrls.filter((url) => url.trim());
+  const validUrls = sanitizeImageUrls(imageUrls);
 
   await prisma.$transaction([
     prisma.productImage.deleteMany({ where: { productId: id } }),
@@ -89,7 +95,7 @@ export async function updateProduct(
         ...productData,
         images: {
           create: validUrls.map((url, index) => ({
-            url: url.trim(),
+            url,
             order: index,
           })),
         },

@@ -1,15 +1,56 @@
-import { writeFile, mkdir } from "fs/promises";
+import { writeFile, mkdir, chmod } from "fs/promises";
+import { existsSync } from "fs";
 import path from "path";
+import { platform } from "os";
+
+/**
+ * PM2 or other runners sometimes use a cwd that is not the Next app root, so uploads
+ * would be written to the wrong folder and /uploads/... 404s. Set on the server, e.g.:
+ * MADILIK_PROJECT_ROOT=/var/www/madilik
+ */
+function resolveProjectRoot(): string {
+  const fromEnv = process.env.MADILIK_PROJECT_ROOT?.trim();
+  if (fromEnv) return path.resolve(fromEnv);
+  const cwd = process.cwd();
+  if (existsSync(path.join(cwd, "package.json"))) return cwd;
+  return cwd;
+}
 
 /** All user uploads live under public/uploads/{segment} */
 const UPLOADS_ROOT = "uploads";
 
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
-const MIME_TO_EXT: Record<(typeof ALLOWED_TYPES)[number], string> = {
+const ALLOWED_CANONICAL = ["image/jpeg", "image/png", "image/webp"] as const;
+type CanonicalMime = (typeof ALLOWED_CANONICAL)[number];
+
+/** Map odd client MIME strings to canonical types (mobile browsers vary). */
+const MIME_ALIASES: Record<string, CanonicalMime> = {
+  "image/jpg": "image/jpeg",
+  "image/pjpeg": "image/jpeg",
+  "image/x-png": "image/png",
+};
+
+const MIME_TO_EXT: Record<CanonicalMime, string> = {
   "image/jpeg": ".jpg",
   "image/png": ".png",
   "image/webp": ".webp",
 };
+
+const EXT_TO_MIME: Record<string, CanonicalMime> = {
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".webp": "image/webp",
+};
+
+function resolveCanonicalMime(file: File): CanonicalMime | null {
+  let raw = (file.type || "").toLowerCase().trim();
+  if (raw && MIME_ALIASES[raw]) raw = MIME_ALIASES[raw];
+  if (raw && ALLOWED_CANONICAL.includes(raw as CanonicalMime)) {
+    return raw as CanonicalMime;
+  }
+  const ext = path.extname(file.name).toLowerCase();
+  return EXT_TO_MIME[ext] ?? null;
+}
 
 /** Max file size (within 2–5 MB range requested) */
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
@@ -17,7 +58,8 @@ export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 export type UploadSegment = "products" | "banners" | "categories" | "reviews";
 
 function validateImageFile(file: File): { error: string } | null {
-  if (!ALLOWED_TYPES.includes(file.type as (typeof ALLOWED_TYPES)[number])) {
+  const mime = resolveCanonicalMime(file);
+  if (!mime) {
     return { error: "Invalid file type. Use JPEG, PNG, or WebP only." };
   }
   if (file.size > MAX_UPLOAD_BYTES) {
@@ -40,13 +82,13 @@ export async function saveUploadImage(
   const invalid = validateImageFile(file);
   if (invalid) return invalid;
 
-  const mime = file.type as (typeof ALLOWED_TYPES)[number];
+  const mime = resolveCanonicalMime(file)!;
   const ext = MIME_TO_EXT[mime];
 
   const base = `${namePrefix}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   const filename = `${base}${ext}`;
 
-  const publicDir = path.join(process.cwd(), "public", UPLOADS_ROOT, segment);
+  const publicDir = path.join(resolveProjectRoot(), "public", UPLOADS_ROOT, segment);
   await mkdir(publicDir, { recursive: true });
 
   const bytes = await file.arrayBuffer();
@@ -54,6 +96,14 @@ export async function saveUploadImage(
   const filePath = path.join(publicDir, filename);
 
   await writeFile(filePath, buffer);
+
+  if (platform() !== "win32") {
+    try {
+      await chmod(filePath, 0o644);
+    } catch {
+      /* ignore chmod issues */
+    }
+  }
 
   return { url: `/${UPLOADS_ROOT}/${segment}/${filename}` };
 }

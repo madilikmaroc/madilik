@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Check, Loader2, Upload } from "lucide-react";
-import Image from "next/image";
 
 import type { HomepageContent } from "@/lib/data/site-content";
+import { normalizeMediaSrc } from "@/lib/media-url";
 import { saveHomepageContentAction } from "./actions";
 import { uploadImageViaAdminApi } from "@/lib/client/upload-image";
 import { Button } from "@/components/ui/button";
@@ -44,13 +44,6 @@ const SECTIONS: { title: string; description: string; fields: FieldDef[] }[] = [
         type: "text",
         placeholder: "/uploads/banners/banner-….jpg",
         hint: "Upload from your device (JPEG, PNG, or WebP, max 5MB). The path is set automatically.",
-      },
-      {
-        name: "bannerLink",
-        label: "Banner link (optional)",
-        type: "text",
-        placeholder: "/shop",
-        hint: "Where the banner links to, e.g. /shop, /shop?category=bags",
       },
     ],
   },
@@ -192,8 +185,10 @@ export function HomepageContentForm({ content }: Props) {
               }
 
               if (field.name === "bannerImage") {
-                const displaySrc =
-                  bannerPickPreview || ((values.bannerImage as string) || "").trim();
+                const normalizedBanner = normalizeMediaSrc(
+                  ((values.bannerImage as string) || "").trim(),
+                );
+                const displaySrc = bannerPickPreview || normalizedBanner;
                 return (
                   <div key={field.name} className="space-y-2 sm:col-span-2">
                     <span className="mb-1.5 block text-sm font-medium">{field.label}</span>
@@ -275,15 +270,11 @@ export function HomepageContentForm({ content }: Props) {
                       </div>
                       {displaySrc ? (
                         <div className="relative aspect-[21/7] w-full max-w-2xl overflow-hidden rounded-lg border bg-muted">
-                          <Image
+                          {/* Plain <img>: avoids next/image optimizer issues with /uploads/ on production */}
+                          <img
                             src={displaySrc}
                             alt="Banner preview"
-                            fill
-                            className="object-cover"
-                            sizes="(max-width: 768px) 100vw, 672px"
-                            unoptimized={
-                              displaySrc.startsWith("blob:") || displaySrc.startsWith("data:")
-                            }
+                            className="absolute inset-0 size-full object-cover"
                           />
                         </div>
                       ) : null}

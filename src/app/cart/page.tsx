@@ -15,6 +15,7 @@ import {
   EmptyState,
   QuantitySelector,
   Price,
+  ProductLineImage,
 } from "@/components/storefront";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -38,13 +39,12 @@ function CartItemRow({
 
   return (
     <div className="flex gap-4 py-6 first:pt-0 last:pb-0">
-      <div className="relative aspect-square w-24 shrink-0 overflow-hidden rounded-lg bg-muted sm:w-28">
-        <div className="flex size-full items-center justify-center">
-          <span className="text-2xl text-muted-foreground/40">
-            {item.product.category.name.charAt(0)}
-          </span>
-        </div>
-      </div>
+      <ProductLineImage
+        className="size-24 rounded-lg sm:size-28"
+        imageUrl={item.product.images?.[0]}
+        alt={item.product.name}
+        fallbackLetter={item.product.category.name}
+      />
       <div className="min-w-0 flex-1">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>

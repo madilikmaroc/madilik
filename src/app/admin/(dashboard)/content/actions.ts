@@ -10,7 +10,6 @@ import { uploadHomepageImage } from "@/lib/upload";
 const STRING_FIELDS: (keyof HomepageContent)[] = [
   "announcementBar",
   "bannerImage",
-  "bannerLink",
   "featuredTitle",
   "featuredSubtitle",
   "newsletterTitle",

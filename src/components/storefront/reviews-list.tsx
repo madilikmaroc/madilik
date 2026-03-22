@@ -3,6 +3,7 @@
 import { Star } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import type { ReviewWithUser } from "@/lib/data/reviews";
+import { normalizeMediaSrc } from "@/lib/media-url";
 
 interface ReviewsListProps {
   reviews: ReviewWithUser[];
@@ -55,15 +56,19 @@ export function ReviewsList({ reviews }: ReviewsListProps) {
           </p>
           {review.images.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
-              {review.images.map((url) => (
-                <a key={url} href={url} target="_blank" rel="noopener noreferrer">
-                  <img
-                    src={url}
-                    alt=""
-                    className="h-20 w-20 rounded-lg border object-cover"
-                  />
-                </a>
-              ))}
+              {review.images.map((url) => {
+                const src = normalizeMediaSrc(url);
+                if (!src) return null;
+                return (
+                  <a key={url} href={src} target="_blank" rel="noopener noreferrer">
+                    <img
+                      src={src}
+                      alt=""
+                      className="h-20 w-20 rounded-lg border object-cover"
+                    />
+                  </a>
+                );
+              })}
             </div>
           )}
         </div>

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { normalizeMediaSrc } from "@/lib/media-url";
 
 // ─── Homepage content shape ─────────────────────────────────────────────────
 
@@ -7,7 +8,6 @@ export interface HomepageContent {
   announcementBarVisible: boolean;
 
   bannerImage: string;
-  bannerLink: string;
   bannerVisible: boolean;
 
   featuredTitle: string;
@@ -24,7 +24,6 @@ export const HOMEPAGE_DEFAULTS: HomepageContent = {
   announcementBarVisible: true,
 
   bannerImage: "",
-  bannerLink: "/shop",
   bannerVisible: true,
 
   featuredTitle: "Featured Products",
@@ -47,7 +46,11 @@ export async function getHomepageContent(): Promise<HomepageContent> {
       where: { key: HOMEPAGE_KEY },
     });
     if (!row) return { ...HOMEPAGE_DEFAULTS };
-    return { ...HOMEPAGE_DEFAULTS, ...(row.value as Partial<HomepageContent>) };
+    const merged = { ...HOMEPAGE_DEFAULTS, ...(row.value as Partial<HomepageContent>) };
+    merged.bannerImage = normalizeMediaSrc(merged.bannerImage);
+    // Legacy DB may still contain bannerLink — strip so type matches and admin no longer uses it
+    delete (merged as Record<string, unknown>).bannerLink;
+    return merged;
   } catch {
     return { ...HOMEPAGE_DEFAULTS };
   }
@@ -66,10 +69,13 @@ export async function upsertHomepageContent(
     if (typeof v === "boolean") {
       (merged as Record<string, unknown>)[key] = v;
     } else if (typeof v === "string") {
-      (merged as Record<string, unknown>)[key] = v.trim();
+      const trimmed = v.trim();
+      (merged as Record<string, unknown>)[key] =
+        key === "bannerImage" ? normalizeMediaSrc(trimmed) : trimmed;
     }
   }
 
+  delete (merged as Record<string, unknown>).bannerLink;
   const json = JSON.parse(JSON.stringify(merged));
   await prisma.siteContent.upsert({
     where: { key: HOMEPAGE_KEY },

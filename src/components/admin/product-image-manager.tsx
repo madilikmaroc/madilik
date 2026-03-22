@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Plus, X, ChevronUp, ChevronDown, Upload, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { uploadImageViaAdminApi } from "@/lib/client/upload-image";
+import { normalizeMediaSrc } from "@/lib/media-url";
 
 interface ProductImageManagerProps {
   value: string[];
@@ -15,7 +15,12 @@ const ACCEPT_IMAGES = "image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp";
 
 function ImageThumbnail({ url, localPreview }: { url: string; localPreview?: string | null }) {
   const [error, setError] = useState(false);
-  const src = localPreview || url;
+  const normalized = normalizeMediaSrc(url);
+  const src = localPreview || normalized;
+
+  useEffect(() => {
+    setError(false);
+  }, [url, localPreview]);
 
   return (
     <div className="relative aspect-square w-24 shrink-0 overflow-hidden rounded-lg border bg-muted sm:w-28">
@@ -40,7 +45,6 @@ export function ProductImageManager({ value, onChange }: ProductImageManagerProp
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccessIndex, setUploadSuccessIndex] = useState<number | null>(null);
   const [localPreview, setLocalPreview] = useState<Record<number, string>>({});
-  const [showUrlInputs, setShowUrlInputs] = useState(false);
   const blobUrlsRef = useRef(new Set<string>());
 
   const urls = value.length > 0 ? value : [""];
@@ -172,14 +176,6 @@ export function ProductImageManager({ value, onChange }: ProductImageManagerProp
                     </span>
                   )}
                 </div>
-              ) : showUrlInputs ? (
-                <Input
-                  type="text"
-                  value={url}
-                  onChange={(e) => updateUrl(i, e.target.value)}
-                  placeholder="https://… or /uploads/…"
-                  className="font-mono text-sm"
-                />
               ) : (
                 <p className="text-sm text-muted-foreground">No image yet — use Upload to add one.</p>
               )}
@@ -235,19 +231,10 @@ export function ProductImageManager({ value, onChange }: ProductImageManagerProp
             </div>
           </div>
         ))}
-        <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={addImage}>
-            <Plus className="size-4" />
-            Add image slot
-          </Button>
-          <button
-            type="button"
-            className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
-            onClick={() => setShowUrlInputs((s) => !s)}
-          >
-            {showUrlInputs ? "Hide URL entry" : "Advanced: paste image URL"}
-          </button>
-        </div>
+        <Button type="button" variant="outline" size="sm" onClick={addImage}>
+          <Plus className="size-4" />
+          Add image slot
+        </Button>
       </div>
     </div>
   );

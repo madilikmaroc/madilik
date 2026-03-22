@@ -5,7 +5,7 @@ import Link from "next/link";
 import type { CartItem } from "@/store/cart-store";
 import { useCartStore, getShipping } from "@/store/cart-store";
 import { useLanguage } from "@/contexts/language-context";
-import { Price } from "@/components/storefront";
+import { Price, ProductLineImage } from "@/components/storefront";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
@@ -36,11 +36,12 @@ export function OrderSummary({ className }: OrderSummaryProps) {
             key={item.product.id}
             className="flex gap-3 text-sm"
           >
-            <div className="flex size-12 shrink-0 items-center justify-center rounded-md bg-muted">
-              <span className="text-lg text-muted-foreground/50">
-                {item.product.category.name.charAt(0)}
-              </span>
-            </div>
+            <ProductLineImage
+              className="size-12"
+              imageUrl={item.product.images?.[0]}
+              alt={item.product.name}
+              fallbackLetter={item.product.category.name}
+            />
             <div className="min-w-0 flex-1">
               <Link
                 href={`/shop/${item.product.slug}`}

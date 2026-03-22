@@ -9,6 +9,7 @@ import { useLanguage } from "@/contexts/language-context";
 import { Price } from "./price";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { normalizeMediaSrc } from "@/lib/media-url";
 
 interface ProductCardProps {
   product: ProductDisplay;
@@ -19,6 +20,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const { t } = useLanguage();
   const addItem = useCartStore((s) => s.addItem);
   const hasDiscount = product.compareAtPrice != null;
+  const primaryImageSrc = normalizeMediaSrc(product.images?.[0] ?? "");
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -40,9 +42,9 @@ export function ProductCard({ product, className }: ProductCardProps) {
     >
       <div className="relative overflow-hidden bg-muted aspect-[4/5]">
         {/* Product image or placeholder */}
-        {product.images?.[0] ? (
+        {primaryImageSrc ? (
           <img
-            src={product.images[0]}
+            src={primaryImageSrc}
             alt={product.name}
             className="size-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
           />

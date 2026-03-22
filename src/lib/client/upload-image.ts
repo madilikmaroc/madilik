@@ -10,9 +10,14 @@ export async function uploadImageViaAdminApi(
   fd.set("file", file);
   fd.set("type", type);
 
+  const uploadUrl =
+    typeof window !== "undefined"
+      ? new URL("/api/upload", window.location.origin).toString()
+      : "/api/upload";
+
   let res: Response;
   try {
-    res = await fetch("/api/upload", {
+    res = await fetch(uploadUrl, {
       method: "POST",
       body: fd,
       credentials: "same-origin",

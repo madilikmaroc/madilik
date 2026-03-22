@@ -7,6 +7,7 @@ import { useCartStore, getShipping } from "@/store/cart-store";
 import { useLanguage } from "@/contexts/language-context";
 import { useMounted } from "@/hooks/use-mounted";
 import { formatPrice } from "@/lib/formatters";
+import { ProductLineImage } from "@/components/storefront";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -108,19 +109,12 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
             <ul className="divide-y">
               {items.map((item) => (
                 <li key={item.product.id} className="flex gap-4 px-5 py-4">
-                  <div className="size-[72px] shrink-0 overflow-hidden rounded-xl bg-muted">
-                    {item.product.images?.[0] ? (
-                      <img
-                        src={item.product.images[0]}
-                        alt={item.product.name}
-                        className="size-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex size-full items-center justify-center text-lg font-medium text-muted-foreground/40">
-                        {item.product.category?.name?.charAt(0) ?? "P"}
-                      </div>
-                    )}
-                  </div>
+                  <ProductLineImage
+                    className="size-[72px] rounded-xl"
+                    imageUrl={item.product.images?.[0]}
+                    alt={item.product.name}
+                    fallbackLetter={item.product.category?.name ?? "P"}
+                  />
                   <div className="min-w-0 flex-1">
                     <Link
                       href={`/shop/${item.product.slug}`}

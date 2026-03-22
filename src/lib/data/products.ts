@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { normalizeMediaSrc } from "@/lib/media-url";
 import type { ProductDisplay } from "@/types/product";
 
 function toProductDisplay(product: {
@@ -35,7 +36,9 @@ function toProductDisplay(product: {
     sku: product.sku,
     isFeatured: product.isFeatured,
     category: product.category,
-    images: product.images.map((i) => i.url),
+    images: product.images
+      .map((i) => normalizeMediaSrc(i.url))
+      .filter((url) => url.length > 0),
   };
 }
 

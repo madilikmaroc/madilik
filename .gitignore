@@ -17,6 +17,10 @@
 /.next/
 /out/
 
+# User uploads (keep folder via .gitkeep only)
+/public/uploads/**
+!/public/uploads/**/.gitkeep
+
 # production
 /build
 
