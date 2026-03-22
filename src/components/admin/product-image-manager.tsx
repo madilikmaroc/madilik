@@ -1,25 +1,27 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, X, ChevronUp, ChevronDown, Upload } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Plus, X, ChevronUp, ChevronDown, Upload, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { uploadProductImageAction } from "@/app/admin/(dashboard)/products/actions";
+import { uploadImageViaAdminApi } from "@/lib/client/upload-image";
 
 interface ProductImageManagerProps {
   value: string[];
   onChange: (urls: string[]) => void;
 }
 
-function ImageThumbnail({ url }: { url: string }) {
+const ACCEPT_IMAGES = "image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp";
+
+function ImageThumbnail({ url, localPreview }: { url: string; localPreview?: string | null }) {
   const [error, setError] = useState(false);
-  const isRelative = url.startsWith("/");
+  const src = localPreview || url;
 
   return (
-    <div className="relative aspect-square w-16 shrink-0 overflow-hidden rounded-lg border bg-muted">
-      {url && !error ? (
+    <div className="relative aspect-square w-24 shrink-0 overflow-hidden rounded-lg border bg-muted sm:w-28">
+      {src && !error ? (
         <img
-          src={isRelative ? url : url}
+          src={src}
           alt=""
           className="size-full object-cover"
           onError={() => setError(true)}
@@ -36,14 +38,39 @@ function ImageThumbnail({ url }: { url: string }) {
 export function ProductImageManager({ value, onChange }: ProductImageManagerProps) {
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadSuccessIndex, setUploadSuccessIndex] = useState<number | null>(null);
+  const [localPreview, setLocalPreview] = useState<Record<number, string>>({});
+  const [showUrlInputs, setShowUrlInputs] = useState(false);
+  const blobUrlsRef = useRef(new Set<string>());
 
   const urls = value.length > 0 ? value : [""];
+
+  useEffect(() => {
+    return () => {
+      blobUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
+      blobUrlsRef.current.clear();
+    };
+  }, []);
+
+  function revokePreview(index: number) {
+    setLocalPreview((prev) => {
+      const next = { ...prev };
+      const blob = next[index];
+      if (blob) {
+        URL.revokeObjectURL(blob);
+        blobUrlsRef.current.delete(blob);
+      }
+      delete next[index];
+      return next;
+    });
+  }
 
   function addImage() {
     onChange([...urls.filter(Boolean), ""]);
   }
 
   function removeImage(index: number) {
+    revokePreview(index);
     const next = urls.filter((_, i) => i !== index);
     onChange(next.length > 0 ? next : [""]);
   }
@@ -71,76 +98,108 @@ export function ProductImageManager({ value, onChange }: ProductImageManagerProp
   async function handleUpload(index: number, e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+
     setUploadError(null);
+    setUploadSuccessIndex(null);
+
+    const blobUrl = URL.createObjectURL(file);
+    blobUrlsRef.current.add(blobUrl);
+    setLocalPreview((prev) => {
+      const next = { ...prev };
+      if (next[index]) {
+        URL.revokeObjectURL(next[index]);
+        blobUrlsRef.current.delete(next[index]);
+      }
+      next[index] = blobUrl;
+      return next;
+    });
+
     setUploadingIndex(index);
 
-    const formData = new FormData();
-    formData.set("file", file);
-    const result = await uploadProductImageAction(formData);
-
-    setUploadingIndex(null);
-    e.target.value = "";
-
-    if (result.error) {
-      setUploadError(result.error);
-      return;
-    }
-    if (result.url) {
-      updateUrl(index, result.url);
+    try {
+      const result = await uploadImageViaAdminApi(file, "product");
+      if ("error" in result) {
+        setUploadError(result.error);
+        revokePreview(index);
+      } else {
+        updateUrl(index, result.url);
+        revokePreview(index);
+        setUploadSuccessIndex(index);
+        window.setTimeout(() => setUploadSuccessIndex((cur) => (cur === index ? null : cur)), 3500);
+      }
+    } catch {
+      setUploadError("Upload failed. Please try again.");
+      revokePreview(index);
+    } finally {
+      setUploadingIndex(null);
+      e.target.value = "";
     }
   }
 
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Upload images from your computer. You can add multiple images and reorder with the arrows. Pasting a URL is optional.
+        Choose images from your device (JPEG, PNG, or WebP, max 5MB). You can add several images and
+        reorder them. Images upload immediately and the path is saved when you submit the product
+        form.
       </p>
       {uploadError && (
-        <p className="text-sm text-destructive">{uploadError}</p>
+        <p className="text-sm font-medium text-destructive" role="alert">
+          {uploadError}
+        </p>
       )}
       <div className="space-y-3">
         {urls.map((url, i) => (
           <div
             key={i}
-            className="flex flex-wrap items-center gap-3 rounded-lg border bg-muted/30 p-3"
+            className="flex flex-wrap items-start gap-3 rounded-lg border bg-muted/30 p-3 sm:flex-nowrap"
           >
-            <ImageThumbnail url={url} />
-            <div className="min-w-0 flex-1 space-y-1">
-              {/* Always submit current URL so upload-only works without manual input */}
+            <ImageThumbnail url={url} localPreview={localPreview[i]} />
+            <div className="min-w-0 flex-1 space-y-2">
               <input type="hidden" name="imageUrls" value={url} />
               {url ? (
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="truncate rounded bg-muted/50 px-2 py-1 font-mono text-xs text-muted-foreground" title={url}>
+                <div className="space-y-1">
+                  <code
+                    className="block max-w-full truncate rounded bg-muted/50 px-2 py-1 text-xs text-muted-foreground"
+                    title={url}
+                  >
                     {url}
-                  </span>
-                  <span className="text-xs text-muted-foreground">Uploaded</span>
+                  </code>
+                  {uploadSuccessIndex === i && (
+                    <span className="flex items-center gap-1 text-xs font-medium text-green-600">
+                      <Check className="size-3.5" />
+                      Uploaded successfully
+                    </span>
+                  )}
                 </div>
-              ) : (
+              ) : showUrlInputs ? (
                 <Input
                   type="text"
                   value={url}
                   onChange={(e) => updateUrl(i, e.target.value)}
-                  placeholder="Optional: paste image URL"
+                  placeholder="https://… or /uploads/…"
                   className="font-mono text-sm"
                 />
+              ) : (
+                <p className="text-sm text-muted-foreground">No image yet — use Upload to add one.</p>
               )}
               <div className="flex flex-wrap items-center gap-1">
                 <input
                   id={`product-image-upload-${i}`}
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  accept={ACCEPT_IMAGES}
                   className="hidden"
                   onChange={(e) => handleUpload(i, e)}
                   disabled={uploadingIndex !== null}
                 />
                 <label
                   htmlFor={`product-image-upload-${i}`}
-                  className={`inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-input bg-background px-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground ${
+                  className={`inline-flex h-8 cursor-pointer items-center gap-1 rounded-md border border-input bg-background px-2.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground ${
                     uploadingIndex !== null ? "cursor-not-allowed opacity-50" : ""
                   }`}
                 >
                   <Upload className="size-3.5" />
-                  {uploadingIndex === i ? "Uploading…" : url ? "Replace" : "Upload"}
+                  {uploadingIndex === i ? "Uploading…" : url ? "Replace image" : "Upload image"}
                 </label>
                 <Button
                   type="button"
@@ -176,10 +235,19 @@ export function ProductImageManager({ value, onChange }: ProductImageManagerProp
             </div>
           </div>
         ))}
-        <Button type="button" variant="outline" size="sm" onClick={addImage}>
-          <Plus className="size-4" />
-          Add image
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={addImage}>
+            <Plus className="size-4" />
+            Add image slot
+          </Button>
+          <button
+            type="button"
+            className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+            onClick={() => setShowUrlInputs((s) => !s)}
+          >
+            {showUrlInputs ? "Hide URL entry" : "Advanced: paste image URL"}
+          </button>
+        </div>
       </div>
     </div>
   );

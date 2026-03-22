@@ -23,7 +23,7 @@ export const HOMEPAGE_DEFAULTS: HomepageContent = {
   announcementBar: "Free shipping across Morocco — Shop Now",
   announcementBarVisible: true,
 
-  bannerImage: "/homepage/img_exmpl1.jpg",
+  bannerImage: "",
   bannerLink: "/shop",
   bannerVisible: true,
 

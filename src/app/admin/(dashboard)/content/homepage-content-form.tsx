@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Check, Loader2, Upload } from "lucide-react";
 import Image from "next/image";
 
 import type { HomepageContent } from "@/lib/data/site-content";
-import { saveHomepageContentAction, uploadHomepageImageAction } from "./actions";
+import { saveHomepageContentAction } from "./actions";
+import { uploadImageViaAdminApi } from "@/lib/client/upload-image";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
@@ -39,10 +40,10 @@ const SECTIONS: { title: string; description: string; fields: FieldDef[] }[] = [
       { name: "bannerVisible", label: "Show homepage banner", type: "toggle" },
       {
         name: "bannerImage",
-        label: "Banner image path",
+        label: "Banner image",
         type: "text",
-        placeholder: "/homepage/banner.jpg",
-        hint: "Upload an image below or paste a path manually.",
+        placeholder: "/uploads/banners/banner-….jpg",
+        hint: "Upload from your device (JPEG, PNG, or WebP, max 5MB). The path is set automatically.",
       },
       {
         name: "bannerLink",
@@ -79,7 +80,11 @@ export function HomepageContentForm({ content }: Props) {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [bannerPickPreview, setBannerPickPreview] = useState<string | null>(null);
+  const [uploadOk, setUploadOk] = useState(false);
+  const [showBannerPath, setShowBannerPath] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const bannerBlobRef = useRef<string | null>(null);
 
   function updateField(name: keyof HomepageContent, value: string | boolean) {
     setValues((prev) => ({ ...prev, [name]: value }));
@@ -112,24 +117,48 @@ export function HomepageContentForm({ content }: Props) {
     });
   };
 
+  useEffect(() => {
+    return () => {
+      if (bannerBlobRef.current) {
+        URL.revokeObjectURL(bannerBlobRef.current);
+        bannerBlobRef.current = null;
+      }
+    };
+  }, []);
+
   async function handleBannerUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
     setError(null);
+    setUploadOk(false);
+
+    if (bannerBlobRef.current) {
+      URL.revokeObjectURL(bannerBlobRef.current);
+      bannerBlobRef.current = null;
+    }
+    const preview = URL.createObjectURL(file);
+    bannerBlobRef.current = preview;
+    setBannerPickPreview(preview);
+
     try {
-      const fd = new FormData();
-      fd.set("file", file);
-      const result = await uploadHomepageImageAction(fd);
-      if ("error" in result && result.error) {
+      const result = await uploadImageViaAdminApi(file, "banner");
+      if ("error" in result) {
         setError(result.error);
-      } else if (result.url) {
+      } else {
         updateField("bannerImage", result.url);
+        setUploadOk(true);
+        window.setTimeout(() => setUploadOk(false), 4000);
       }
     } catch {
       setError("Upload failed. Please try again.");
     } finally {
       setUploading(false);
+      setBannerPickPreview(null);
+      if (bannerBlobRef.current) {
+        URL.revokeObjectURL(bannerBlobRef.current);
+        bannerBlobRef.current = null;
+      }
       if (fileRef.current) fileRef.current.value = "";
     }
   }
@@ -158,6 +187,107 @@ export function HomepageContentForm({ content }: Props) {
                     <label htmlFor={field.name} className="text-sm font-medium">
                       {field.label}
                     </label>
+                  </div>
+                );
+              }
+
+              if (field.name === "bannerImage") {
+                const displaySrc =
+                  bannerPickPreview || ((values.bannerImage as string) || "").trim();
+                return (
+                  <div key={field.name} className="space-y-2 sm:col-span-2">
+                    <span className="mb-1.5 block text-sm font-medium">{field.label}</span>
+                    <div className="rounded-lg border bg-muted/30 px-3 py-2">
+                      {(values.bannerImage as string)?.trim() ? (
+                        <code className="break-all text-xs text-muted-foreground">
+                          {values.bannerImage as string}
+                        </code>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">
+                          No banner image yet — upload one from your device.
+                        </span>
+                      )}
+                    </div>
+                    {field.hint && (
+                      <p className="mt-1 text-xs text-muted-foreground">{field.hint}</p>
+                    )}
+
+                    <details
+                      className="rounded-lg border bg-card/50 px-3 py-2 text-sm"
+                      open={showBannerPath}
+                    >
+                      <summary
+                        className="cursor-pointer font-medium text-muted-foreground hover:text-foreground"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setShowBannerPath((o) => !o);
+                        }}
+                      >
+                        Advanced: edit image path manually
+                      </summary>
+                      {showBannerPath && (
+                        <input
+                          id="bannerImage"
+                          type="text"
+                          value={values.bannerImage as string}
+                          onChange={(e) => updateField("bannerImage", e.target.value)}
+                          placeholder={field.placeholder}
+                          className="mt-2 h-9 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
+                        />
+                      )}
+                    </details>
+
+                    <div className="mt-3 space-y-3">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <input
+                          ref={fileRef}
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/*"
+                          className="hidden"
+                          onChange={handleBannerUpload}
+                          disabled={uploading}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fileRef.current?.click()}
+                          disabled={uploading}
+                        >
+                          {uploading ? (
+                            <>
+                              <Loader2 className="mr-2 size-4 animate-spin" />
+                              Uploading…
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="mr-2 size-4" />
+                              Upload banner from device
+                            </>
+                          )}
+                        </Button>
+                        {uploadOk && (
+                          <span className="flex items-center gap-1 text-sm font-medium text-green-600">
+                            <Check className="size-4" />
+                            Banner uploaded — save changes to publish
+                          </span>
+                        )}
+                      </div>
+                      {displaySrc ? (
+                        <div className="relative aspect-[21/7] w-full max-w-2xl overflow-hidden rounded-lg border bg-muted">
+                          <Image
+                            src={displaySrc}
+                            alt="Banner preview"
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 100vw, 672px"
+                            unoptimized={
+                              displaySrc.startsWith("blob:") || displaySrc.startsWith("data:")
+                            }
+                          />
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
                 );
               }
@@ -191,52 +321,6 @@ export function HomepageContentForm({ content }: Props) {
                   )}
                   {field.hint && (
                     <p className="mt-1 text-xs text-muted-foreground">{field.hint}</p>
-                  )}
-
-                  {/* Banner image upload widget */}
-                  {field.name === "bannerImage" && (
-                    <div className="mt-3 space-y-3">
-                      <div className="flex items-center gap-3">
-                        <input
-                          ref={fileRef}
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp,image/gif"
-                          className="hidden"
-                          onChange={handleBannerUpload}
-                          disabled={uploading}
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => fileRef.current?.click()}
-                          disabled={uploading}
-                        >
-                          {uploading ? (
-                            <>
-                              <Loader2 className="mr-2 size-4 animate-spin" />
-                              Uploading…
-                            </>
-                          ) : (
-                            <>
-                              <Upload className="mr-2 size-4" />
-                              Upload banner image
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                      {(values.bannerImage as string) && (
-                        <div className="relative aspect-[21/7] w-full max-w-md overflow-hidden rounded-lg border bg-muted">
-                          <Image
-                            src={values.bannerImage as string}
-                            alt="Banner preview"
-                            fill
-                            className="object-cover"
-                            sizes="400px"
-                          />
-                        </div>
-                      )}
-                    </div>
                   )}
                 </div>
               );
