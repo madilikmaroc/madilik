@@ -9,7 +9,7 @@ import { useLanguage } from "@/contexts/language-context";
 import { Price } from "./price";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { normalizeMediaSrc } from "@/lib/media-url";
+import { normalizeMediaSrc, isVideoMediaUrl } from "@/lib/media-url";
 import { useProductTranslation } from "@/hooks/use-product-translation";
 
 interface ProductCardProps {
@@ -23,6 +23,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const addItem = useCartStore((s) => s.addItem);
   const hasDiscount = product.compareAtPrice != null;
   const primaryImageSrc = normalizeMediaSrc(product.images?.[0] ?? "");
+  const primaryIsVideo = Boolean(primaryImageSrc && isVideoMediaUrl(primaryImageSrc));
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -44,11 +45,22 @@ export function ProductCard({ product, className }: ProductCardProps) {
     >
       <div className="relative shrink-0 overflow-hidden bg-muted aspect-square">
         {primaryImageSrc ? (
-          <img
-            src={primaryImageSrc}
-            alt={tr.name}
-            className="size-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
-          />
+          primaryIsVideo ? (
+            <video
+              src={primaryImageSrc}
+              muted
+              playsInline
+              preload="metadata"
+              className="size-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
+              aria-label={tr.name}
+            />
+          ) : (
+            <img
+              src={primaryImageSrc}
+              alt={tr.name}
+              className="size-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
+            />
+          )
         ) : (
           <div className="flex size-full items-center justify-center bg-gradient-to-br from-muted to-muted/60">
             <span className="text-5xl font-light text-muted-foreground/25">

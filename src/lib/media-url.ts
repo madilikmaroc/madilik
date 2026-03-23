@@ -105,3 +105,11 @@ export function resolvedMediaUrl(stored: string | null | undefined): string {
   if (stored == null) return "";
   return normalizeMediaSrc(stored);
 }
+
+/** Detect product media URLs that should render as <video> (by path extension). */
+export function isVideoMediaUrl(stored: string | null | undefined): boolean {
+  const s = normalizeMediaSrc(stored ?? "").toLowerCase();
+  if (!s) return false;
+  const pathOnly = (s.split("?")[0] ?? s).trim();
+  return /\.(mp4|webm|mov|ogv|ogg)$/i.test(pathOnly);
+}

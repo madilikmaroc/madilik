@@ -17,7 +17,8 @@ export default async function AdminProductsPage() {
             Products
           </h1>
           <p className="mt-1 text-muted-foreground">
-            Manage your store products
+            Manage your store products — use <strong className="text-foreground">Edit</strong>{" "}
+            on any row to change name, price, stock, images, category, and all other fields.
           </p>
         </div>
         <Link href="/admin/products/new">
@@ -64,7 +65,12 @@ export default async function AdminProductsPage() {
                   className="border-b last:border-0 transition-colors hover:bg-muted/40"
                 >
                   <td className="px-4 py-3.5 font-semibold">
-                    {product.name}
+                    <Link
+                      href={`/admin/products/${product.id}/edit`}
+                      className="text-primary underline-offset-4 hover:underline"
+                    >
+                      {product.name}
+                    </Link>
                   </td>
                   <td className="px-4 py-3.5 font-mono text-xs text-muted-foreground">
                     {product.slug}

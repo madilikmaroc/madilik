@@ -6,6 +6,7 @@ import {
   TrendingUp,
   ArrowRight,
   Plus,
+  Pencil,
 } from "lucide-react";
 
 import { getOrderStats } from "@/lib/data/admin-orders";
@@ -80,11 +81,18 @@ export default async function AdminDashboardPage() {
           <ArrowRight className="size-4" />
         </Link>
         <Link
-          href="/admin/products/new"
+          href="/admin/products"
           className="inline-flex h-10 items-center gap-2 rounded-xl border-2 border-primary bg-transparent px-5 text-sm font-bold text-primary shadow-sm transition-all hover:bg-primary hover:text-primary-foreground hover:shadow-md active:scale-[0.98]"
         >
+          <Pencil className="size-4" />
+          Edit products
+        </Link>
+        <Link
+          href="/admin/products/new"
+          className="inline-flex h-10 items-center gap-2 rounded-xl border-2 border-muted-foreground/35 bg-transparent px-5 text-sm font-bold text-foreground shadow-sm transition-all hover:border-primary hover:text-primary hover:bg-primary/5 hover:shadow-md active:scale-[0.98]"
+        >
           <Plus className="size-4" />
-          New Product
+          New product
         </Link>
       </div>
     </div>

@@ -1,22 +1,64 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Plus, X, ChevronUp, ChevronDown, Upload, Check } from "lucide-react";
+import {
+  Plus,
+  X,
+  ChevronUp,
+  ChevronDown,
+  Upload,
+  Check,
+  GripVertical,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { uploadImageViaAdminApi } from "@/lib/client/upload-image";
-import { normalizeMediaSrc } from "@/lib/media-url";
+import { normalizeMediaSrc, isVideoMediaUrl } from "@/lib/media-url";
+import { cn } from "@/lib/utils";
 
 interface ProductImageManagerProps {
   value: string[];
   onChange: (urls: string[]) => void;
 }
 
-const ACCEPT_IMAGES = "image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp";
+const ACCEPT_MEDIA =
+  "image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime,.jpg,.jpeg,.png,.webp,.mp4,.webm,.mov";
 
-function ImageThumbnail({ url, localPreview }: { url: string; localPreview?: string | null }) {
+function revokeAllBlobUrls(
+  blobUrlsRef: React.MutableRefObject<Set<string>>,
+  setLocalPreview: React.Dispatch<React.SetStateAction<Record<number, string>>>,
+  setLocalIsVideo: React.Dispatch<React.SetStateAction<Record<number, boolean>>>,
+) {
+  setLocalPreview((prev) => {
+    Object.values(prev).forEach((u) => {
+      if (u.startsWith("blob:")) {
+        URL.revokeObjectURL(u);
+        blobUrlsRef.current.delete(u);
+      }
+    });
+    return {};
+  });
+  setLocalIsVideo({});
+}
+
+function MediaThumbnail({
+  url,
+  localPreview,
+  localIsVideo,
+}: {
+  url: string;
+  localPreview?: string | null;
+  /** When preview is a blob: URL, whether the picked file was a video */
+  localIsVideo?: boolean;
+}) {
   const [error, setError] = useState(false);
   const normalized = normalizeMediaSrc(url);
   const src = localPreview || normalized;
+  const useVideo =
+    Boolean(src) &&
+    !error &&
+    (localPreview
+      ? localIsVideo === true
+      : isVideoMediaUrl(normalized));
 
   useEffect(() => {
     setError(false);
@@ -25,12 +67,23 @@ function ImageThumbnail({ url, localPreview }: { url: string; localPreview?: str
   return (
     <div className="relative aspect-square w-24 shrink-0 overflow-hidden rounded-lg border bg-muted sm:w-28">
       {src && !error ? (
-        <img
-          src={src}
-          alt=""
-          className="size-full object-cover"
-          onError={() => setError(true)}
-        />
+        useVideo ? (
+          <video
+            src={src}
+            muted
+            playsInline
+            preload="metadata"
+            className="size-full object-cover"
+            onError={() => setError(true)}
+          />
+        ) : (
+          <img
+            src={src}
+            alt=""
+            className="size-full object-cover"
+            onError={() => setError(true)}
+          />
+        )
       ) : (
         <div className="flex size-full items-center justify-center text-muted-foreground/50">
           <span className="text-lg">?</span>
@@ -45,6 +98,9 @@ export function ProductImageManager({ value, onChange }: ProductImageManagerProp
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccessIndex, setUploadSuccessIndex] = useState<number | null>(null);
   const [localPreview, setLocalPreview] = useState<Record<number, string>>({});
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [localIsVideo, setLocalIsVideo] = useState<Record<number, boolean>>({});
   const blobUrlsRef = useRef(new Set<string>());
 
   const urls = value.length > 0 ? value : [""];
@@ -67,6 +123,11 @@ export function ProductImageManager({ value, onChange }: ProductImageManagerProp
       delete next[index];
       return next;
     });
+    setLocalIsVideo((prev) => {
+      const next = { ...prev };
+      delete next[index];
+      return next;
+    });
   }
 
   function addImage() {
@@ -74,9 +135,31 @@ export function ProductImageManager({ value, onChange }: ProductImageManagerProp
   }
 
   function removeImage(index: number) {
-    revokePreview(index);
     const next = urls.filter((_, i) => i !== index);
-    onChange(next.length > 0 ? next : [""]);
+    const finalNext = next.length > 0 ? next : [""];
+    onChange(finalNext);
+
+    setLocalPreview((prev) => {
+      const blob = prev[index];
+      if (blob) {
+        URL.revokeObjectURL(blob);
+        blobUrlsRef.current.delete(blob);
+      }
+      const reindexed: Record<number, string> = {};
+      for (let ni = 0; ni < finalNext.length; ni++) {
+        const oi = ni < index ? ni : ni + 1;
+        if (oi !== index && prev[oi]) reindexed[ni] = prev[oi];
+      }
+      return reindexed;
+    });
+    setLocalIsVideo((prev) => {
+      const reindexed: Record<number, boolean> = {};
+      for (let ni = 0; ni < finalNext.length; ni++) {
+        const oi = ni < index ? ni : ni + 1;
+        if (oi !== index && prev[oi] !== undefined) reindexed[ni] = prev[oi];
+      }
+      return reindexed;
+    });
   }
 
   function updateUrl(index: number, url: string) {
@@ -87,6 +170,7 @@ export function ProductImageManager({ value, onChange }: ProductImageManagerProp
 
   function moveUp(index: number) {
     if (index <= 0) return;
+    revokeAllBlobUrls(blobUrlsRef, setLocalPreview, setLocalIsVideo);
     const next = [...urls];
     [next[index - 1], next[index]] = [next[index], next[index - 1]];
     onChange(next);
@@ -94,8 +178,18 @@ export function ProductImageManager({ value, onChange }: ProductImageManagerProp
 
   function moveDown(index: number) {
     if (index >= urls.length - 1) return;
+    revokeAllBlobUrls(blobUrlsRef, setLocalPreview, setLocalIsVideo);
     const next = [...urls];
     [next[index], next[index + 1]] = [next[index + 1], next[index]];
+    onChange(next);
+  }
+
+  function reorder(from: number, to: number) {
+    if (from === to || from < 0 || to < 0) return;
+    revokeAllBlobUrls(blobUrlsRef, setLocalPreview, setLocalIsVideo);
+    const next = [...urls];
+    const [removed] = next.splice(from, 1);
+    next.splice(to, 0, removed);
     onChange(next);
   }
 
@@ -105,6 +199,11 @@ export function ProductImageManager({ value, onChange }: ProductImageManagerProp
 
     setUploadError(null);
     setUploadSuccessIndex(null);
+
+    const pickedIsVideo =
+      file.type.startsWith("video/") ||
+      /\.(mp4|webm|mov)$/i.test(file.name);
+    setLocalIsVideo((prev) => ({ ...prev, [index]: pickedIsVideo }));
 
     const blobUrl = URL.createObjectURL(file);
     blobUrlsRef.current.add(blobUrl);
@@ -143,9 +242,10 @@ export function ProductImageManager({ value, onChange }: ProductImageManagerProp
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Choose images from your device (JPEG, PNG, or WebP, max 5MB). You can add several images and
-        reorder them. Images upload immediately and the path is saved when you submit the product
-        form.
+        Upload <strong className="text-foreground">images</strong> (JPEG, PNG, WebP, max 5MB) or{" "}
+        <strong className="text-foreground">videos</strong> (MP4, WebM, MOV, max 24MB). Drag the
+        grip handle to reorder left/right in the list. Order here is the gallery order on the
+        storefront. Paths save when you submit the product form.
       </p>
       {uploadError && (
         <p className="text-sm font-medium text-destructive" role="alert">
@@ -155,10 +255,49 @@ export function ProductImageManager({ value, onChange }: ProductImageManagerProp
       <div className="space-y-3">
         {urls.map((url, i) => (
           <div
-            key={i}
-            className="flex flex-wrap items-start gap-3 rounded-lg border bg-muted/30 p-3 sm:flex-nowrap"
+            key={`${i}-${url || "slot"}`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = "move";
+              if (draggingIndex !== null && draggingIndex !== i) {
+                setDragOverIndex(i);
+              }
+            }}
+            onDragLeave={() => setDragOverIndex((cur) => (cur === i ? null : cur))}
+            onDrop={(e) => {
+              e.preventDefault();
+              const from = draggingIndex;
+              setDragOverIndex(null);
+              setDraggingIndex(null);
+              if (from === null || from === i) return;
+              reorder(from, i);
+            }}
+            className={cn(
+              "flex flex-wrap items-start gap-2 rounded-lg border bg-muted/30 p-3 transition-shadow sm:flex-nowrap sm:gap-3",
+              dragOverIndex === i && draggingIndex !== i && "ring-2 ring-primary ring-offset-2",
+            )}
           >
-            <ImageThumbnail url={url} localPreview={localPreview[i]} />
+            <div
+              className="flex shrink-0 cursor-grab touch-none items-center self-center active:cursor-grabbing"
+              draggable={uploadingIndex === null}
+              title="Drag to reorder"
+              onDragStart={(e) => {
+                e.dataTransfer.effectAllowed = "move";
+                e.dataTransfer.setData("text/plain", String(i));
+                setDraggingIndex(i);
+              }}
+              onDragEnd={() => {
+                setDraggingIndex(null);
+                setDragOverIndex(null);
+              }}
+            >
+              <GripVertical className="size-5 text-muted-foreground" aria-hidden />
+            </div>
+            <MediaThumbnail
+              url={url}
+              localPreview={localPreview[i]}
+              localIsVideo={localIsVideo[i]}
+            />
             <div className="min-w-0 flex-1 space-y-2">
               <input type="hidden" name="imageUrls" value={url} />
               {url ? (
@@ -177,13 +316,15 @@ export function ProductImageManager({ value, onChange }: ProductImageManagerProp
                   )}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">No image yet — use Upload to add one.</p>
+                <p className="text-sm text-muted-foreground">
+                  No file yet — use Upload to add an image or video.
+                </p>
               )}
               <div className="flex flex-wrap items-center gap-1">
                 <input
                   id={`product-image-upload-${i}`}
                   type="file"
-                  accept={ACCEPT_IMAGES}
+                  accept={ACCEPT_MEDIA}
                   className="hidden"
                   onChange={(e) => handleUpload(i, e)}
                   disabled={uploadingIndex !== null}
@@ -195,7 +336,11 @@ export function ProductImageManager({ value, onChange }: ProductImageManagerProp
                   }`}
                 >
                   <Upload className="size-3.5" />
-                  {uploadingIndex === i ? "Uploading…" : url ? "Replace image" : "Upload image"}
+                  {uploadingIndex === i
+                    ? "Uploading…"
+                    : url
+                      ? "Replace image / video"
+                      : "Upload image / video"}
                 </label>
                 <Button
                   type="button"
@@ -233,7 +378,7 @@ export function ProductImageManager({ value, onChange }: ProductImageManagerProp
         ))}
         <Button type="button" variant="outline" size="sm" onClick={addImage}>
           <Plus className="size-4" />
-          Add image slot
+          Add media slot
         </Button>
       </div>
     </div>

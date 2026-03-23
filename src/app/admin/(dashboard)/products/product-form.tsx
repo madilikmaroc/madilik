@@ -307,7 +307,7 @@ export function ProductForm({
       </div>
 
       <div className="space-y-6 rounded-xl border bg-card p-6">
-        <h2 className="font-semibold">Images</h2>
+        <h2 className="font-semibold">Media (images and video)</h2>
         <ProductImageManager value={imageUrls} onChange={setImageUrls} />
       </div>
 
