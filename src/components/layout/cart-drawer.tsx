@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
-import { useCartStore, getShipping } from "@/store/cart-store";
+import { useCartStore, getShippingForItems } from "@/store/cart-store";
 import { useLanguage } from "@/contexts/language-context";
 import { useMounted } from "@/hooks/use-mounted";
 import { formatPrice } from "@/lib/formatters";
@@ -27,7 +27,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
   const getSubtotal = useCartStore((s) => s.getSubtotal);
 
   const subtotal = mounted ? getSubtotal() : 0;
-  const shipping = getShipping(subtotal);
+  const shipping = mounted ? getShippingForItems(items) : 0;
   const total = subtotal + shipping;
 
   useEffect(() => {
@@ -173,7 +173,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t("cart.shipping")}</span>
-                <span className="font-medium text-green-600">{t("cart.free")}</span>
+                <span className="font-medium">{formatPrice(shipping, loc)}</span>
               </div>
             </div>
             <Separator className="my-4" />
@@ -187,7 +187,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
               </Button>
             </Link>
             <p className="mt-3 text-center text-[11px] text-muted-foreground">
-              🔒 Secure checkout · Free shipping
+              🔒 Secure checkout
             </p>
             <Link
               href="/cart"

@@ -30,6 +30,13 @@ export function getShipping(_subtotal: number): number {
   return 0;
 }
 
+export function getShippingForItems(items: CartItem[]): number {
+  return items.reduce(
+    (sum, item) => sum + (item.product.shippingTax ?? 0) * item.quantity,
+    0,
+  );
+}
+
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({

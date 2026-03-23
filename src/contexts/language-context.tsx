@@ -36,6 +36,17 @@ function getStoredLocale(): Locale {
   const stored = localStorage.getItem(STORAGE_KEY) as Locale | null;
   if (stored && (stored === "en" || stored === "ar" || stored === "fr"))
     return stored;
+
+  const browserLocales = [
+    ...(navigator.languages ?? []),
+    navigator.language,
+  ].filter(Boolean);
+  for (const lang of browserLocales) {
+    const code = lang.toLowerCase();
+    if (code.startsWith("ar")) return "ar";
+    if (code.startsWith("fr")) return "fr";
+    if (code.startsWith("en")) return "en";
+  }
   return DEFAULT_LOCALE;
 }
 

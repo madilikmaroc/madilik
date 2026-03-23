@@ -7,7 +7,7 @@ import { ShoppingBag, Trash2 } from "lucide-react";
 import type { CartItem } from "@/store/cart-store";
 import {
   useCartStore,
-  getShipping,
+  getShippingForItems,
 } from "@/store/cart-store";
 import { useLanguage } from "@/contexts/language-context";
 import {
@@ -119,7 +119,7 @@ export default function CartPage() {
   }, [items, removeItem, updateQuantity]);
 
   const subtotal = getSubtotal();
-  const shipping = getShipping(subtotal);
+  const shipping = getShippingForItems(items);
   const total = subtotal + shipping;
 
   if (items.length === 0) {
@@ -196,7 +196,9 @@ export default function CartPage() {
                 <span className="text-muted-foreground">
                   {t("cart.shipping")}
                 </span>
-                <span className="text-green-600">{t("cart.free")}</span>
+                <span>
+                  <Price value={shipping} />
+                </span>
               </div>
             </div>
             <Separator className="my-4" />

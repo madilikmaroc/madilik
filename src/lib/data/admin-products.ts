@@ -41,6 +41,7 @@ export async function createProduct(data: {
   description: string;
   details: string;
   price: number;
+  shippingTax: number;
   compareAtPrice: number | null;
   badge: string | null;
   rating: number;
@@ -73,6 +74,7 @@ export async function updateProduct(
     description: string;
     details: string;
     price: number;
+    shippingTax: number;
     compareAtPrice: number | null;
     badge: string | null;
     rating: number;

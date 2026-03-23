@@ -10,6 +10,7 @@ function toProductDisplay(product: {
   description: string;
   details: string;
   price: number;
+  shippingTax: number;
   compareAtPrice: number | null;
   badge: string | null;
   rating: number;
@@ -28,6 +29,7 @@ function toProductDisplay(product: {
     description: product.description,
     details: product.details,
     price: product.price,
+    shippingTax: product.shippingTax,
     compareAtPrice: product.compareAtPrice,
     badge: product.badge as ProductDisplay["badge"],
     rating: product.rating,

@@ -49,6 +49,7 @@ model Product {
   description     String
   details         String
   price           Float
+  shippingTax     Float         @default(0)
   compareAtPrice  Float?
   badge           String?
   rating          Float

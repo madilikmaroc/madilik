@@ -26,6 +26,7 @@ function parseProductFormData(formData: FormData) {
   const description = (formData.get("description") as string)?.trim() ?? "";
   const details = (formData.get("details") as string)?.trim() ?? "";
   const price = parseFloat(formData.get("price") as string) || 0;
+  const shippingTax = parseFloat(formData.get("shippingTax") as string) || 0;
   const compareAtPrice = parseFloatSafe(formData.get("compareAtPrice") as string | null);
   const badgeRaw = (formData.get("badge") as string)?.trim() || null;
   const badge = badgeRaw && BADGE_OPTIONS.includes(badgeRaw as (typeof BADGE_OPTIONS)[number])
@@ -53,6 +54,7 @@ function parseProductFormData(formData: FormData) {
     description,
     details,
     price,
+    shippingTax,
     compareAtPrice,
     badge,
     rating,
@@ -74,6 +76,7 @@ function validateProduct(data: ReturnType<typeof parseProductFormData>): string[
   if (!data.description) errors.push("Description is required");
   if (!data.details) errors.push("Details are required");
   if (data.price < 0) errors.push("Price must be 0 or greater");
+  if (data.shippingTax < 0) errors.push("Shipping tax must be 0 or greater");
   if (data.compareAtPrice !== null && data.compareAtPrice < 0)
     errors.push("Compare at price must be 0 or greater");
   if (data.rating < 0 || data.rating > 5) errors.push("Rating must be between 0 and 5");

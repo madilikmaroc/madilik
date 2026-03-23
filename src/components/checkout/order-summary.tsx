@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 import type { CartItem } from "@/store/cart-store";
-import { useCartStore, getShipping } from "@/store/cart-store";
+import { useCartStore, getShippingForItems } from "@/store/cart-store";
 import { useLanguage } from "@/contexts/language-context";
 import { Price, ProductLineImage } from "@/components/storefront";
 import { Separator } from "@/components/ui/separator";
@@ -18,7 +18,7 @@ export function OrderSummary({ className }: OrderSummaryProps) {
   const items = useCartStore((s) => s.items);
   const getSubtotal = useCartStore((s) => s.getSubtotal);
   const subtotal = getSubtotal();
-  const shipping = getShipping(subtotal);
+  const shipping = getShippingForItems(items);
   const total = subtotal + shipping;
 
   return (
@@ -71,7 +71,9 @@ export function OrderSummary({ className }: OrderSummaryProps) {
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">{t("cart.shipping")}</span>
-          <span className="text-green-600">{t("cart.free")}</span>
+          <span>
+            <Price value={shipping} />
+          </span>
         </div>
       </div>
 

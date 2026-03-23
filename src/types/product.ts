@@ -7,6 +7,7 @@ export interface ProductDisplay {
   description: string;
   details: string;
   price: number;
+  shippingTax?: number;
   compareAtPrice?: number | null;
   badge?: "New" | "Sale" | "Bestseller" | null;
   rating: number;

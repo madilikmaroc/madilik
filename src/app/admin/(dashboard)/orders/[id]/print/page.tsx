@@ -93,6 +93,14 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
           line-height: 1.4;
           color: #333;
         }
+        .ship-to .address-label {
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: .6px;
+          color: #666;
+          margin-top: 4px;
+        }
 
         /* ── COD box ── */
         .cod-box {
@@ -168,6 +176,26 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
           padding-top: 8px;
           font-size: 13px;
         }
+        .totals {
+          margin: 8px 16px 10px;
+          padding: 10px 12px;
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          background: #fafafa;
+        }
+        .totals .row {
+          display: flex;
+          justify-content: space-between;
+          font-size: 12px;
+          margin-bottom: 4px;
+        }
+        .totals .row:last-child {
+          margin-bottom: 0;
+          font-weight: 800;
+          font-size: 14px;
+          border-top: 1px solid #d9d9d9;
+          padding-top: 6px;
+        }
 
         /* ── Notes ── */
         .notes {
@@ -219,6 +247,7 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
           <div className="ship-to-label">📦 Ship To</div>
           <div className="name">{order.customerName}</div>
           <div className="phone">📞 {order.phone}</div>
+          <div className="address-label">Shipping Address</div>
           <div className="address">📍 {order.location}</div>
         </div>
 
@@ -261,6 +290,21 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <div className="totals">
+          <div className="row">
+            <span>Subtotal</span>
+            <span>{formatPrice(order.subtotal, loc)}</span>
+          </div>
+          <div className="row">
+            <span>Shipping</span>
+            <span>{formatPrice(order.shippingCost, loc)}</span>
+          </div>
+          <div className="row">
+            <span>Total</span>
+            <span>{formatPrice(order.total, loc)}</span>
+          </div>
         </div>
 
         {/* ▸ Internal notes area */}

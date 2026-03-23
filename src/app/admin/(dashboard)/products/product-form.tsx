@@ -137,7 +137,7 @@ export function ProductForm({
 
       <div className="space-y-6 rounded-xl border bg-card p-6">
         <h2 className="font-semibold">Pricing & inventory</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <div>
             <label htmlFor="price" className="mb-1.5 block text-sm font-medium">
               Price (MAD) *
@@ -164,6 +164,19 @@ export function ProductForm({
               min="0"
               defaultValue={product?.compareAtPrice ?? ""}
               placeholder="Optional"
+            />
+          </div>
+          <div>
+            <label htmlFor="shippingTax" className="mb-1.5 block text-sm font-medium">
+              Shipping tax / delivery cost (MAD)
+            </label>
+            <Input
+              id="shippingTax"
+              name="shippingTax"
+              type="number"
+              step="0.01"
+              min="0"
+              defaultValue={product?.shippingTax ?? 0}
             />
           </div>
           <div>

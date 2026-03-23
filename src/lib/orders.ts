@@ -3,11 +3,6 @@ import {
   validateStockForCheckout,
   type StockValidationItem,
 } from "@/lib/stock";
-
-/** Shipping is free everywhere (included in product prices). */
-function getShipping(_subtotal: number): number {
-  return 0;
-}
 import type { ProductDisplay } from "@/types/product";
 
 export interface CartItemPayload {
@@ -111,8 +106,43 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     };
   }
 
-  const subtotal = input.items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
-  const shippingCost = getShipping(subtotal);
+  const productIds = Array.from(new Set(input.items.map((i) => i.product.id)));
+  const products = await prisma.product.findMany({
+    where: { id: { in: productIds } },
+    select: { id: true, name: true, slug: true, price: true, shippingTax: true },
+  });
+  const productMap = new Map(products.map((p) => [p.id, p]));
+
+  const pricedItems: Array<{
+    productId: string;
+    productName: string;
+    productSlug: string;
+    unitPrice: number;
+    shippingTax: number;
+    quantity: number;
+    lineTotal: number;
+  }> = [];
+  for (const item of input.items) {
+    const product = productMap.get(item.product.id);
+    if (!product) {
+      return { success: false, error: "Product not found" };
+    }
+    pricedItems.push({
+      productId: product.id,
+      productName: product.name,
+      productSlug: product.slug,
+      unitPrice: product.price,
+      shippingTax: product.shippingTax,
+      quantity: item.quantity,
+      lineTotal: product.price * item.quantity,
+    });
+  }
+
+  const subtotal = pricedItems.reduce((sum, i) => sum + i.lineTotal, 0);
+  const shippingCost = pricedItems.reduce(
+    (sum, i) => sum + i.shippingTax * i.quantity,
+    0,
+  );
   const total = subtotal + shippingCost;
 
   const order = await prisma.$transaction(async (tx) => {
@@ -129,22 +159,22 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
         locale: input.locale,
         ...(input.userId && { userId: input.userId }),
         items: {
-          create: input.items.map((item) => ({
-            productId: item.product.id,
-            productName: item.product.name,
-            productSlug: item.product.slug,
-            unitPrice: item.product.price,
+          create: pricedItems.map((item) => ({
+            productId: item.productId,
+            productName: item.productName,
+            productSlug: item.productSlug,
+            unitPrice: item.unitPrice,
             quantity: item.quantity,
-            lineTotal: item.product.price * item.quantity,
+            lineTotal: item.lineTotal,
           })),
         },
       },
       include: { items: true },
     });
 
-    for (const item of input.items) {
+    for (const item of pricedItems) {
       await tx.product.update({
-        where: { id: item.product.id },
+        where: { id: item.productId },
         data: {
           stock: {
             decrement: item.quantity,
