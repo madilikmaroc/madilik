@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { findOrCreateGoogleUser } from "@/lib/data/users";
 import { getCustomerSession } from "@/lib/auth/customer-session";
+import { saveSubscriberEmail } from "@/lib/subscribers";
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID ?? "";
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET ?? "";
@@ -118,6 +119,7 @@ export async function GET(request: NextRequest) {
     session.fullName = user.fullName;
     session.loginAt = Date.now();
     await session.save();
+    await saveSubscriberEmail(user.email, "google");
 
     return NextResponse.redirect(`${publicBaseUrl}${redirectTo}`);
   } catch {

@@ -5,6 +5,7 @@ import { findUserByEmail } from "@/lib/data/users";
 import { verifyPassword } from "@/lib/auth/password";
 import { getCustomerSession } from "@/lib/auth/customer-session";
 import { clearCustomerSession } from "@/lib/auth/customer-session";
+import { saveSubscriberEmail } from "@/lib/subscribers";
 
 export type LoginResult =
   | { success: true }
@@ -46,6 +47,7 @@ export async function loginAction(
   session.fullName = user.fullName;
   session.loginAt = Date.now();
   await session.save();
+  await saveSubscriberEmail(user.email, "login");
 
   return { success: true };
 }

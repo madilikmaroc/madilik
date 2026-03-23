@@ -130,14 +130,15 @@ export default async function AdminProductsPage() {
                     {new Date(product.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3.5">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-2">
                       <Link href={`/admin/products/${product.id}/edit`}>
                         <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          className="rounded-lg"
+                          variant="outline"
+                          size="sm"
+                          className="rounded-lg gap-1.5 border-primary text-primary hover:bg-primary hover:text-primary-foreground font-semibold"
                         >
-                          <Pencil className="size-4" />
+                          <Pencil className="size-3.5" />
+                          Edit
                         </Button>
                       </Link>
                       <DeleteProductButton

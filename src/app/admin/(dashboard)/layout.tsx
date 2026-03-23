@@ -11,6 +11,7 @@ import {
   Menu,
   Settings,
   Navigation,
+  Mail,
 } from "lucide-react";
 
 import { isAdminAuthenticated } from "@/lib/auth/admin-session";
@@ -24,7 +25,8 @@ const navItems = [
   { href: "/admin/reviews", label: "Reviews", icon: Star },
   { href: "/admin/content", label: "Content", icon: FileText },
   { href: "/admin/navigation", label: "Navigation", icon: Navigation },
-  { href: "/admin/settings/store", label: "Settings", icon: Settings },
+  { href: "/admin/subscribers", label: "Subscribers", icon: Mail },
+  { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 export default async function AdminDashboardLayout({

@@ -3,6 +3,7 @@ import { createOrder, validateOrderInput } from "@/lib/orders";
 import { getCustomer } from "@/lib/auth/customer-session";
 import { getOrderById } from "@/lib/data/admin-orders";
 import { sendOrderNotification } from "@/lib/email";
+import { saveSubscriberEmail } from "@/lib/subscribers";
 
 export async function POST(request: Request) {
   try {
@@ -21,6 +22,9 @@ export async function POST(request: Request) {
       ...validated.data,
       ...(customer && { userId: customer.userId }),
     };
+    if (customer?.email) {
+      await saveSubscriberEmail(customer.email, "checkout");
+    }
     const result = await createOrder(data);
 
     if (!result.success) {

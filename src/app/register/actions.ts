@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { findUserByEmail, createUser } from "@/lib/data/users";
 import { hashPassword } from "@/lib/auth/password";
 import { getCustomerSession } from "@/lib/auth/customer-session";
+import { saveSubscriberEmail } from "@/lib/subscribers";
 
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_FULL_NAME = 100;
@@ -67,6 +68,8 @@ export async function registerAction(
     email: trimmedEmail,
     passwordHash,
   });
+
+  await saveSubscriberEmail(trimmedEmail, "register");
 
   const session = await getCustomerSession();
   session.userId = user.id;

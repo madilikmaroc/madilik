@@ -12,6 +12,7 @@ import { useMounted } from "@/hooks/use-mounted";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { SearchDialog } from "@/components/layout/search-dialog";
 import { CartDrawer } from "@/components/layout/cart-drawer";
+import { SignInModal } from "@/components/layout/sign-in-modal";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -25,16 +26,19 @@ interface NavbarProps {
   announcementText?: string;
   announcementVisible?: boolean;
   categories?: { name: string; slug: string }[];
+  isLoggedIn?: boolean;
 }
 
 export function Navbar({
   announcementText,
   announcementVisible = true,
   categories = [],
+  isLoggedIn = false,
 }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+  const [signInOpen, setSignInOpen] = useState(false);
   const { t } = useLanguage();
   const mounted = useMounted();
   const itemCount = useCartStore((s) => s.getItemCount());
@@ -200,16 +204,28 @@ export function Navbar({
 
             <LanguageSwitcher />
 
-            <Link href="/account">
+            {isLoggedIn ? (
+              <Link href="/account">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-10 text-foreground hover:bg-muted"
+                  aria-label={t("nav.account")}
+                >
+                  <User className="size-[22px]" />
+                </Button>
+              </Link>
+            ) : (
               <Button
                 variant="ghost"
                 size="icon"
                 className="size-10 text-foreground hover:bg-muted"
-                aria-label={t("nav.account")}
+                aria-label="Sign In"
+                onClick={() => setSignInOpen(true)}
               >
                 <User className="size-[22px]" />
               </Button>
-            </Link>
+            )}
 
             <Button
               variant="ghost"
@@ -243,6 +259,9 @@ export function Navbar({
 
       <SearchDialog open={searchOpen} onClose={closeSearch} />
       <CartDrawer open={cartOpen} onClose={closeCart} />
+      {!isLoggedIn && (
+        <SignInModal open={signInOpen} onClose={() => setSignInOpen(false)} />
+      )}
     </>
   );
 }

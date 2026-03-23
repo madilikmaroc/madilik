@@ -198,3 +198,12 @@ model CategoryTranslation {
   @@index([categoryId])
   @@map("category_translations")
 }
+
+model EmailSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  source    String   @default("newsletter")
+  createdAt DateTime @default(now())
+
+  @@map("email_subscribers")
+}

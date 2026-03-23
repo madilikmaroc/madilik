@@ -61,12 +61,19 @@ function getValue(obj: unknown, path: string): string | undefined {
 }
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE);
+  const [locale, setLocaleState] = useState<Locale>(() => {
+    if (typeof window === "undefined") return DEFAULT_LOCALE;
+    return getStoredLocale();
+  });
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setLocaleState(getStoredLocale());
+    const detected = getStoredLocale();
+    setLocaleState(detected);
     setMounted(true);
+    // Apply immediately on mount
+    document.documentElement.lang = detected === "ar" ? "ar" : detected;
+    document.documentElement.dir = isRtl(detected) ? "rtl" : "ltr";
   }, []);
 
   const setLocale = useCallback((newLocale: Locale) => {

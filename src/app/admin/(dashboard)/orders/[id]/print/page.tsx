@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { getOrderById, formatOrderReference } from "@/lib/data/admin-orders";
 import { formatPrice } from "@/lib/formatters";
-import { siteConfig } from "@/config/site";
 import { OrderPrintClient } from "./print-client";
+import { prisma } from "@/lib/db";
 
 interface PrintPageProps {
   params: Promise<{ id: string }>;
@@ -21,12 +21,23 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
     year: "numeric",
   });
   const totalItems = order.items.reduce((s, i) => s + i.quantity, 0);
+  const productIds = Array.from(
+    new Set(order.items.map((item) => item.productId).filter(Boolean) as string[]),
+  );
+  const productShipping = productIds.length
+    ? await prisma.product.findMany({
+        where: { id: { in: productIds } },
+        select: { id: true, shippingTax: true },
+      })
+    : [];
+  const shippingByProductId = new Map(
+    productShipping.map((p) => [p.id, p.shippingTax]),
+  );
 
   return (
     <>
       <OrderPrintClient />
 
-      {/* ── All styles are inline so nothing leaks from the website ── */}
       <style>{`
         @media print {
           @page { size: A5; margin: 8mm; }
@@ -57,7 +68,7 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
           background: #111;
           color: #fff;
         }
-        .slip-header .brand { font-size: 18px; font-weight: 800; letter-spacing: .5px; }
+        .slip-header .title { font-size: 16px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }
         .slip-header .ref { font-family: monospace; font-size: 14px; font-weight: 700; }
         .slip-header .date { font-size: 11px; opacity: .7; margin-top: 2px; text-align: right; }
 
@@ -197,23 +208,6 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
           padding-top: 6px;
         }
 
-        /* ── Notes ── */
-        .notes {
-          margin: 0 16px 10px;
-          padding: 8px 14px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          min-height: 30px;
-        }
-        .notes .notes-title {
-          font-size: 9px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-          color: #999;
-          margin-bottom: 4px;
-        }
-
         /* ── Footer ── */
         .slip-footer {
           padding: 8px 20px;
@@ -233,9 +227,9 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
       `}</style>
 
       <div className="slip">
-        {/* ▸ Header: brand + reference + date */}
+        {/* ▸ Header: plain text — no logo/image */}
         <div className="slip-header">
-          <span className="brand">{siteConfig.name}</span>
+          <span className="title">Order Invoice</span>
           <div style={{ textAlign: "right" }}>
             <div className="ref">{ref}</div>
             <div className="date">{date}</div>
@@ -262,7 +256,7 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
 
         <hr className="cut-line" />
 
-        {/* ▸ Items (compact) */}
+        {/* ▸ Items (with unit price, qty, line total) */}
         <div className="items-section">
           <div className="section-title">
             Order Items ({totalItems} item{totalItems !== 1 ? "s" : ""})
@@ -272,7 +266,9 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
               <tr>
                 <th>Product</th>
                 <th className="r">Qty</th>
-                <th className="r">Price</th>
+                <th className="r">Unit Price</th>
+                <th className="r">Shipping Tax</th>
+                <th className="r">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -280,12 +276,21 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
                 <tr key={item.id}>
                   <td>{item.productName}</td>
                   <td className="r">{item.quantity}</td>
+                  <td className="r">{formatPrice(item.unitPrice, loc)}</td>
+                  <td className="r">
+                    {formatPrice(
+                      (shippingByProductId.get(item.productId ?? "") ?? 0) * item.quantity,
+                      loc,
+                    )}
+                  </td>
                   <td className="r">{formatPrice(item.lineTotal, loc)}</td>
                 </tr>
               ))}
               <tr className="total-row">
                 <td>Total</td>
                 <td className="r">{totalItems}</td>
+                <td></td>
+                <td className="r">{formatPrice(order.shippingCost, loc)}</td>
                 <td className="r">{formatPrice(order.total, loc)}</td>
               </tr>
             </tbody>
@@ -307,14 +312,9 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
           </div>
         </div>
 
-        {/* ▸ Internal notes area */}
-        <div className="notes">
-          <div className="notes-title">Notes</div>
-        </div>
-
-        {/* ▸ Footer */}
+        {/* ▸ Footer — plain text only */}
         <div className="slip-footer">
-          {siteConfig.name} &middot; {ref} &middot; {date}
+          {ref} &middot; {date}
         </div>
       </div>
     </>
