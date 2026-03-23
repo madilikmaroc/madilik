@@ -10,18 +10,9 @@ interface PrintPageProps {
 
 export default async function OrderPrintPage({ params }: PrintPageProps) {
   const { id } = await params;
-  console.log("[print] request orderId:", id);
 
   const order = await getOrderById(id);
   if (!order) notFound();
-  console.log("[print] fetched order payload:", {
-    id: order.id,
-    customerName: order.customerName,
-    phone: order.phone,
-    location: order.location,
-    items: order.items.length,
-    total: order.total,
-  });
 
   const ref = formatOrderReference(order.id);
   const safe = (value: string | null | undefined, fallback = "N/A") =>
@@ -40,7 +31,6 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
     country: locationParts[3] || "N/A",
     orderNumber: ref,
   };
-  console.log("[print] mapped shipping fields:", mappedShipping);
 
   const loc = order.locale as "en" | "fr" | "ar";
   const date = new Date(order.createdAt).toLocaleDateString("en-GB", {
@@ -61,16 +51,6 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
   const shippingByProductId = new Map(
     productShipping.map((p) => [p.id, p.shippingTax]),
   );
-  const debugHtml = `
-    <h1>Order Invoice ${mappedShipping.orderNumber}</h1>
-    <div>Name: ${mappedShipping.fullName}</div>
-    <div>Phone: ${mappedShipping.phone}</div>
-    <div>Address: ${mappedShipping.shippingAddress}</div>
-    <div>City: ${mappedShipping.city}</div>
-    <div>Postal: ${mappedShipping.postalCode}</div>
-    <div>Country: ${mappedShipping.country}</div>
-  `;
-  console.log("[print] generated html before print:", debugHtml);
 
   return (
     <>
@@ -81,15 +61,14 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
           @page { size: A5; margin: 8mm; }
           body { background: #fff !important; }
           .no-print { display: none !important; }
-          /* Hide global site chrome and print only invoice area */
-          body * { visibility: hidden !important; }
-          .slip, .slip * { visibility: visible !important; }
           .slip {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+            page-break-inside: avoid;
+            break-inside: avoid;
           }
-          .slip { border: none !important; box-shadow: none !important; margin: 0 !important; max-width: 100% !important; page-break-inside: avoid; break-inside: avoid; }
           .slip * { page-break-inside: avoid; break-inside: avoid; }
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -105,7 +84,6 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
         }
         @media screen { .slip { box-shadow: 0 4px 24px rgba(0,0,0,.12); } }
 
-        /* ── Header row ── */
         .slip-header {
           display: flex;
           justify-content: space-between;
@@ -118,7 +96,6 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
         .slip-header .ref { font-family: monospace; font-size: 14px; font-weight: 700; }
         .slip-header .date { font-size: 11px; opacity: .7; margin-top: 2px; text-align: right; }
 
-        /* ── Customer box (most prominent) ── */
         .ship-to {
           border: 2px dashed #333;
           margin: 12px 16px;
@@ -169,7 +146,6 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
           color: #555;
         }
 
-        /* ── COD box ── */
         .cod-box {
           display: flex;
           align-items: center;
@@ -203,7 +179,6 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
           font-family: monospace;
         }
 
-        /* ── Items table ── */
         .items-section {
           margin: 0 16px 8px;
         }
@@ -264,7 +239,6 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
           padding-top: 6px;
         }
 
-        /* ── Footer ── */
         .slip-footer {
           padding: 8px 20px;
           background: #f5f5f5;
@@ -274,7 +248,6 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
           border-top: 1px solid #ddd;
         }
 
-        /* ── Cut line ── */
         .cut-line {
           margin: 0 16px 8px;
           border: none;
@@ -283,7 +256,6 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
       `}</style>
 
       <div className="slip">
-        {/* ▸ Header: plain text — no logo/image */}
         <div className="slip-header">
           <span className="title">Order Invoice</span>
           <div style={{ textAlign: "right" }}>
@@ -292,7 +264,6 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
           </div>
         </div>
 
-        {/* ▸ SHIP TO – most prominent */}
         <div className="ship-to">
           <div className="ship-to-label">📦 Ship To</div>
           <div className="name">{mappedShipping.fullName}</div>
@@ -315,7 +286,6 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
           </div>
         </div>
 
-        {/* ▸ COD Payment */}
         <div className="cod-box">
           <div>
             <span className="badge">COD</span>
@@ -326,7 +296,6 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
 
         <hr className="cut-line" />
 
-        {/* ▸ Items (with unit price, qty, line total) */}
         <div className="items-section">
           <div className="section-title">
             Order Items ({totalItems} item{totalItems !== 1 ? "s" : ""})
@@ -382,7 +351,6 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
           </div>
         </div>
 
-        {/* ▸ Footer — plain text only */}
         <div className="slip-footer">
           {ref} &middot; {date}
         </div>

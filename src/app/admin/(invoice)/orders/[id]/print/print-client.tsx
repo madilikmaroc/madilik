@@ -16,12 +16,6 @@ export function OrderPrintClient({ orderId }: { orderId: string }) {
       const hasRenderedData = Boolean(nameEl?.textContent?.trim());
 
       if (hasRenderedData) {
-        console.log("[print] render ready:", {
-          orderId,
-          attempts,
-          hasRenderedData,
-          name: nameEl?.textContent?.trim() ?? "",
-        });
         window.print();
         return;
       }
@@ -57,6 +51,7 @@ export function OrderPrintClient({ orderId }: { orderId: string }) {
       }}
     >
       <button
+        type="button"
         onClick={() => window.print()}
         style={{
           padding: "8px 20px",
@@ -72,6 +67,7 @@ export function OrderPrintClient({ orderId }: { orderId: string }) {
         🖨️ Print / Save PDF
       </button>
       <button
+        type="button"
         onClick={() => window.history.back()}
         style={{
           padding: "8px 20px",

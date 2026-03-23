@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { headers } from "next/headers";
 import "./globals.css";
 
 import { siteConfig } from "@/config/site";
@@ -44,11 +45,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headerList = await headers();
+  const isAdminOrderPrint =
+    headerList.get("x-madilik-order-print") === "1";
+
   return (
     <html lang="en" dir="ltr" suppressHydrationWarning>
       <head>
@@ -72,12 +77,16 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <LanguageProvider>
-          <div className="relative flex min-h-screen flex-col">
-            <NavbarWrapper />
-            <main className="flex-1">{children}</main>
-            <FooterWrapper />
-            <WhatsappFloatingWrapper />
-          </div>
+          {isAdminOrderPrint ? (
+            <div className="min-h-screen bg-[#f5f5f5]">{children}</div>
+          ) : (
+            <div className="relative flex min-h-screen flex-col">
+              <NavbarWrapper />
+              <main className="flex-1">{children}</main>
+              <FooterWrapper />
+              <WhatsappFloatingWrapper />
+            </div>
+          )}
         </LanguageProvider>
       </body>
     </html>
