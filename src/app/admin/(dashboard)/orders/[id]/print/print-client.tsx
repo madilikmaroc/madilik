@@ -4,13 +4,39 @@ import { useEffect } from "react";
 
 /**
  * Floating toolbar with Print + Back buttons (hidden when printing).
- * Auto-triggers print dialog on mount.
+ * Auto-triggers print dialog only after data is rendered.
  */
-export function OrderPrintClient() {
+export function OrderPrintClient({ orderId }: { orderId: string }) {
   useEffect(() => {
-    const t = setTimeout(() => window.print(), 500);
-    return () => clearTimeout(t);
-  }, []);
+    let cancelled = false;
+    let timer: number | null = null;
+    let attempts = 0;
+
+    const triggerWhenReady = () => {
+      const nameEl = document.querySelector(".ship-to .name");
+      const hasRenderedData = Boolean(nameEl?.textContent?.trim());
+
+      if (hasRenderedData || attempts >= 20) {
+        console.log("[print] render ready:", {
+          orderId,
+          attempts,
+          hasRenderedData,
+          name: nameEl?.textContent?.trim() ?? "",
+        });
+        window.print();
+        return;
+      }
+
+      attempts += 1;
+      timer = window.setTimeout(triggerWhenReady, 150);
+    };
+
+    timer = window.setTimeout(triggerWhenReady, 50);
+    return () => {
+      cancelled = true;
+      if (cancelled && timer) window.clearTimeout(timer);
+    };
+  }, [orderId]);
 
   return (
     <div

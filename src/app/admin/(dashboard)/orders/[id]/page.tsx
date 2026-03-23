@@ -5,7 +5,7 @@ import { formatPrice } from "@/lib/formatters";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { OrderStatusForm } from "./order-status-form";
 import { DeleteOrderButton } from "../delete-order-button";
-import { Printer } from "lucide-react";
+import { PrintOrderButton } from "./print-order-button";
 
 interface OrderPageProps {
   params: Promise<{ id: string }>;
@@ -43,15 +43,7 @@ export default async function AdminOrderPage({ params }: OrderPageProps) {
             currentStatus={order.status}
             disabled={order.status === "DELIVERED" || order.status === "CANCELED"}
           />
-          <a
-            href={`/admin/orders/${order.id}/print`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex h-9 items-center gap-2 rounded-xl border border-primary bg-transparent px-4 text-sm font-bold text-primary shadow-sm transition-all hover:bg-primary hover:text-primary-foreground active:scale-[0.98]"
-          >
-            <Printer className="size-4" />
-            Print PDF
-          </a>
+          <PrintOrderButton orderId={order.id} />
           <DeleteOrderButton
             orderId={order.id}
             orderReference={orderReference}

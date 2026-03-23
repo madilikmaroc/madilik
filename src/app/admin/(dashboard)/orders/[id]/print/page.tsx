@@ -10,10 +10,38 @@ interface PrintPageProps {
 
 export default async function OrderPrintPage({ params }: PrintPageProps) {
   const { id } = await params;
+  console.log("[print] request orderId:", id);
+
   const order = await getOrderById(id);
   if (!order) notFound();
+  console.log("[print] fetched order payload:", {
+    id: order.id,
+    customerName: order.customerName,
+    phone: order.phone,
+    location: order.location,
+    items: order.items.length,
+    total: order.total,
+  });
 
   const ref = formatOrderReference(order.id);
+  const safe = (value: string | null | undefined, fallback = "N/A") =>
+    value && value.trim() ? value.trim() : fallback;
+  const locationRaw = safe(order.location, "");
+  const locationParts = locationRaw
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const mappedShipping = {
+    fullName: safe(order.customerName),
+    phone: safe(order.phone),
+    shippingAddress: locationParts[0] || safe(order.location),
+    city: locationParts[1] || "N/A",
+    postalCode: locationParts[2] || "N/A",
+    country: locationParts[3] || "N/A",
+    orderNumber: ref,
+  };
+  console.log("[print] mapped shipping fields:", mappedShipping);
+
   const loc = order.locale as "en" | "fr" | "ar";
   const date = new Date(order.createdAt).toLocaleDateString("en-GB", {
     day: "2-digit",
@@ -33,10 +61,20 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
   const shippingByProductId = new Map(
     productShipping.map((p) => [p.id, p.shippingTax]),
   );
+  const debugHtml = `
+    <h1>Order Invoice ${mappedShipping.orderNumber}</h1>
+    <div>Name: ${mappedShipping.fullName}</div>
+    <div>Phone: ${mappedShipping.phone}</div>
+    <div>Address: ${mappedShipping.shippingAddress}</div>
+    <div>City: ${mappedShipping.city}</div>
+    <div>Postal: ${mappedShipping.postalCode}</div>
+    <div>Country: ${mappedShipping.country}</div>
+  `;
+  console.log("[print] generated html before print:", debugHtml);
 
   return (
     <>
-      <OrderPrintClient />
+      <OrderPrintClient orderId={order.id} />
 
       <style>{`
         @media print {
@@ -111,6 +149,16 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
           letter-spacing: .6px;
           color: #666;
           margin-top: 4px;
+        }
+        .ship-to .address-grid {
+          margin-top: 8px;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 6px 10px;
+          font-size: 11px;
+        }
+        .ship-to .address-grid span {
+          color: #555;
         }
 
         /* ── COD box ── */
@@ -239,10 +287,24 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
         {/* ▸ SHIP TO – most prominent */}
         <div className="ship-to">
           <div className="ship-to-label">📦 Ship To</div>
-          <div className="name">{order.customerName}</div>
-          <div className="phone">📞 {order.phone}</div>
+          <div className="name">{mappedShipping.fullName}</div>
+          <div className="phone">📞 {mappedShipping.phone}</div>
           <div className="address-label">Shipping Address</div>
-          <div className="address">📍 {order.location}</div>
+          <div className="address">📍 {mappedShipping.shippingAddress}</div>
+          <div className="address-grid">
+            <div>
+              <strong>City:</strong> <span>{mappedShipping.city}</span>
+            </div>
+            <div>
+              <strong>Postal Code:</strong> <span>{mappedShipping.postalCode}</span>
+            </div>
+            <div>
+              <strong>Country:</strong> <span>{mappedShipping.country}</span>
+            </div>
+            <div>
+              <strong>Order #:</strong> <span>{mappedShipping.orderNumber}</span>
+            </div>
+          </div>
         </div>
 
         {/* ▸ COD Payment */}
