@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { normalizeMediaSrc, isVideoMediaUrl } from "@/lib/media-url";
 
@@ -88,6 +88,8 @@ export function ProductGallery({
 }: ProductGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [mediaError, setMediaError] = useState<Record<number, boolean>>({});
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
   const validImages = images
     .map((url) => normalizeMediaSrc(url))
     .filter((url) => url.length > 0);
@@ -95,10 +97,47 @@ export function ProductGallery({
   const hasMedia = validImages.length > 0;
   const currentUrl = displayImages[selectedIndex] ?? "";
   const currentIsVideo = Boolean(currentUrl && isVideoMediaUrl(currentUrl));
+  const totalMedia = displayImages.length;
+
+  function goPrev() {
+    if (totalMedia <= 1) return;
+    setSelectedIndex((prev) => (prev - 1 + totalMedia) % totalMedia);
+  }
+
+  function goNext() {
+    if (totalMedia <= 1) return;
+    setSelectedIndex((prev) => (prev + 1) % totalMedia);
+  }
+
+  function onTouchStart(e: React.TouchEvent<HTMLDivElement>) {
+    const touch = e.touches[0];
+    if (!touch) return;
+    touchStartXRef.current = touch.clientX;
+    touchStartYRef.current = touch.clientY;
+  }
+
+  function onTouchEnd(e: React.TouchEvent<HTMLDivElement>) {
+    const touch = e.changedTouches[0];
+    const startX = touchStartXRef.current;
+    const startY = touchStartYRef.current;
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+    if (!touch || startX == null || startY == null) return;
+
+    const deltaX = touch.clientX - startX;
+    const deltaY = touch.clientY - startY;
+    if (Math.abs(deltaX) < 30 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+    if (deltaX < 0) goNext();
+    else goPrev();
+  }
 
   return (
     <div className={cn("space-y-3 sm:space-y-4", className)}>
-      <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-muted sm:aspect-square lg:aspect-[4/5]">
+      <div
+        className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-muted sm:aspect-square lg:aspect-[4/5]"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
         {hasMedia && currentUrl && !mediaError[selectedIndex] ? (
           <MainMedia
             url={currentUrl}
@@ -118,14 +157,14 @@ export function ProductGallery({
       </div>
 
       {displayImages.length > 1 ? (
-        <div className="flex gap-2 overflow-x-auto pb-2">
+        <div className="flex gap-2 overflow-x-auto pb-2 [scrollbar-width:thin] touch-pan-x snap-x snap-mandatory">
           {displayImages.map((url, i) => (
             <button
               key={url + i}
               type="button"
               onClick={() => setSelectedIndex(i)}
               className={cn(
-                "relative aspect-square w-[70px] shrink-0 overflow-hidden rounded-xl border-2 transition-all",
+                "relative aspect-square w-[70px] shrink-0 snap-start overflow-hidden rounded-xl border-2 transition-all",
                 selectedIndex === i
                   ? "border-primary ring-2 ring-primary/20"
                   : "border-transparent hover:border-muted-foreground/40",
