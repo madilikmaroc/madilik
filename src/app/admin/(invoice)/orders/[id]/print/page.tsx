@@ -28,7 +28,6 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
     shippingAddress: locationParts[0] || safe(order.location),
     city: locationParts[1] || "N/A",
     postalCode: locationParts[2] || "N/A",
-    country: locationParts[3] || "N/A",
     orderNumber: ref,
   };
 
@@ -276,9 +275,6 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
             </div>
             <div>
               <strong>Postal Code:</strong> <span>{mappedShipping.postalCode}</span>
-            </div>
-            <div>
-              <strong>Country:</strong> <span>{mappedShipping.country}</span>
             </div>
             <div>
               <strong>Order #:</strong> <span>{mappedShipping.orderNumber}</span>
