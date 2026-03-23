@@ -81,6 +81,14 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
           @page { size: A5; margin: 8mm; }
           body { background: #fff !important; }
           .no-print { display: none !important; }
+          /* Hide global site chrome and print only invoice area */
+          body * { visibility: hidden !important; }
+          .slip, .slip * { visibility: visible !important; }
+          .slip {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+          }
           .slip { border: none !important; box-shadow: none !important; margin: 0 !important; max-width: 100% !important; page-break-inside: avoid; break-inside: avoid; }
           .slip * { page-break-inside: avoid; break-inside: avoid; }
         }

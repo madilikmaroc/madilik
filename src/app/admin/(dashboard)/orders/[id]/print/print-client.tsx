@@ -8,7 +8,6 @@ import { useEffect } from "react";
  */
 export function OrderPrintClient({ orderId }: { orderId: string }) {
   useEffect(() => {
-    let cancelled = false;
     let timer: number | null = null;
     let attempts = 0;
 
@@ -16,7 +15,7 @@ export function OrderPrintClient({ orderId }: { orderId: string }) {
       const nameEl = document.querySelector(".ship-to .name");
       const hasRenderedData = Boolean(nameEl?.textContent?.trim());
 
-      if (hasRenderedData || attempts >= 20) {
+      if (hasRenderedData) {
         console.log("[print] render ready:", {
           orderId,
           attempts,
@@ -27,14 +26,21 @@ export function OrderPrintClient({ orderId }: { orderId: string }) {
         return;
       }
 
+      if (attempts >= 80) {
+        console.warn("[print] invoice render timeout; print not triggered", {
+          orderId,
+          attempts,
+        });
+        return;
+      }
+
       attempts += 1;
       timer = window.setTimeout(triggerWhenReady, 150);
     };
 
     timer = window.setTimeout(triggerWhenReady, 50);
     return () => {
-      cancelled = true;
-      if (cancelled && timer) window.clearTimeout(timer);
+      if (timer) window.clearTimeout(timer);
     };
   }, [orderId]);
 
