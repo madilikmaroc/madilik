@@ -10,6 +10,7 @@ import { Price } from "./price";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { normalizeMediaSrc } from "@/lib/media-url";
+import { useProductTranslation } from "@/hooks/use-product-translation";
 
 interface ProductCardProps {
   product: ProductDisplay;
@@ -18,6 +19,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, className }: ProductCardProps) {
   const { t } = useLanguage();
+  const tr = useProductTranslation(product);
   const addItem = useCartStore((s) => s.addItem);
   const hasDiscount = product.compareAtPrice != null;
   const primaryImageSrc = normalizeMediaSrc(product.images?.[0] ?? "");
@@ -40,22 +42,21 @@ export function ProductCard({ product, className }: ProductCardProps) {
       href={`/shop/${product.slug}`}
       className={cn("group flex flex-col h-full overflow-hidden rounded-2xl border border-border/40 bg-card shadow-sm hover:shadow-lg transition-all duration-300", className)}
     >
-      <div className="relative overflow-hidden bg-muted aspect-[4/5]">
-        {/* Product image or placeholder */}
+      <div className="relative shrink-0 overflow-hidden bg-muted aspect-square">
         {primaryImageSrc ? (
           <img
             src={primaryImageSrc}
-            alt={product.name}
+            alt={tr.name}
             className="size-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
           />
         ) : (
           <div className="flex size-full items-center justify-center bg-gradient-to-br from-muted to-muted/60">
             <span className="text-5xl font-light text-muted-foreground/25">
-              {product.category.name.charAt(0)}
+              {tr.categoryName.charAt(0)}
             </span>
           </div>
         )}
-        <div className="absolute left-3 top-3 flex flex-col gap-1.5">
+        <div className="absolute left-2 top-2 flex flex-col gap-1 sm:left-3 sm:top-3 sm:gap-1.5">
           {product.stock === 0 ? (
             <Badge variant="destructive" className="text-[10px] font-semibold uppercase tracking-wider">
               {t("stock.outOfStock")}
@@ -85,42 +86,41 @@ export function ProductCard({ product, className }: ProductCardProps) {
         </div>
       </div>
 
-      <div className="flex flex-col flex-grow p-4 space-y-2">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80">
-          {product.category.name}
+      <div className="flex min-h-0 flex-1 flex-col p-3 sm:p-4">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80 sm:text-[11px]">
+          {tr.categoryName}
         </p>
-        <h3 className="line-clamp-2 text-[15px] font-medium leading-snug group-hover:text-primary transition-colors flex-grow">
-          {product.name}
+        <h3 className="mt-1 line-clamp-2 text-[13px] font-medium leading-snug group-hover:text-primary transition-colors sm:text-[15px]">
+          {tr.name}
         </h3>
-        <div className="flex items-center gap-2 pt-1">
-          <Price value={product.price} className="text-base font-bold text-foreground" />
+        <div className="mt-1.5 flex items-center gap-2">
+          <Price value={product.price} className="text-sm font-bold text-foreground sm:text-base" />
           {hasDiscount && (
             <Price
               value={product.compareAtPrice!}
-              className="text-xs text-muted-foreground line-through font-medium"
+              className="text-[11px] text-muted-foreground line-through font-medium sm:text-xs"
             />
           )}
         </div>
-        <div className="flex items-center gap-1.5 pb-2">
+        <div className="mt-1 flex items-center gap-1.5">
           <div className="flex items-center gap-0.5">
-            <Star className="size-3.5 fill-amber-400 text-amber-400" />
-            <span className="text-xs font-semibold">{product.rating}</span>
+            <Star className="size-3 fill-amber-400 text-amber-400 sm:size-3.5" />
+            <span className="text-[11px] font-semibold sm:text-xs">{product.rating}</span>
           </div>
-          <span className="text-[11px] text-muted-foreground font-medium">
+          <span className="text-[10px] text-muted-foreground font-medium sm:text-[11px]">
             ({product.reviewCount})
           </span>
         </div>
 
-        {/* Mobile + Desktop Direct Add to Cart (Visible inline at bottom of card) */}
         <div className="mt-auto w-full pt-2">
           <button
             type="button"
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-[13px] font-bold text-primary-foreground shadow-sm transition-all duration-200 hover:bg-primary/90 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2.5 text-[12px] font-bold text-primary-foreground shadow-sm transition-all duration-200 hover:bg-primary/90 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 sm:gap-2 sm:px-4 sm:py-3 sm:text-[13px]"
             onClick={handleAddToCart}
             disabled={product.stock === 0}
             aria-label={t("product.addToCart")}
           >
-            <ShoppingBag className="size-[18px]" />
+            <ShoppingBag className="size-4 sm:size-[18px]" />
             {t("product.addToCart")}
           </button>
         </div>

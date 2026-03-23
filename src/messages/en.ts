@@ -182,6 +182,8 @@ export const en = {
       invalidCredentials: "Invalid email or password",
       noAccount: "Don't have an account?",
       registerLink: "Create account",
+      googleButton: "Continue with Google",
+      orContinueWith: "or continue with email",
     },
     register: {
       title: "Create account",

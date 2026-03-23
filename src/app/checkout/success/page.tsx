@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
@@ -13,6 +13,15 @@ function SuccessContent() {
   const { t } = useLanguage();
   const searchParams = useSearchParams();
   const orderReference = searchParams.get("ref") ?? "";
+  const audioPlayed = useRef(false);
+
+  useEffect(() => {
+    if (audioPlayed.current) return;
+    audioPlayed.current = true;
+    const audio = new Audio("/confirm_order.mp3");
+    audio.volume = 0.7;
+    audio.play().catch(() => {});
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-16 md:py-24">

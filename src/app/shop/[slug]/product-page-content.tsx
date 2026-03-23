@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Truck } from "lucide-react";
 import { ProductDetailsClient } from "./product-details-client";
+import { useProductTranslation } from "@/hooks/use-product-translation";
 
 interface ProductPageContentProps {
   product: ProductDisplay;
@@ -34,6 +35,7 @@ export function ProductPageContent({
   hasReviewed,
 }: ProductPageContentProps) {
   const { t } = useLanguage();
+  const tr = useProductTranslation(product);
 
   return (
     <div className="container mx-auto px-4 py-6 md:py-10">
@@ -41,10 +43,10 @@ export function ProductPageContent({
         items={[
           { label: t("nav.shop"), href: "/shop" },
           {
-            label: product.category.name,
+            label: tr.categoryName,
             href: `/shop?category=${product.category.slug}`,
           },
-          { label: product.name },
+          { label: tr.name },
         ]}
         className="mb-8"
       />
@@ -58,10 +60,10 @@ export function ProductPageContent({
         <div>
           <div className="space-y-4">
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              {product.category.name}
+              {tr.categoryName}
             </p>
             <h1 className="text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
-              {product.name}
+              {tr.name}
             </h1>
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-1">
@@ -100,7 +102,7 @@ export function ProductPageContent({
           </div>
 
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-            {product.shortDescription}
+            {tr.shortDescription}
           </p>
 
           <ProductDetailsClient product={product} />
@@ -143,13 +145,13 @@ export function ProductPageContent({
           <div className="rounded-xl border bg-card p-6">
             <h3 className="text-base font-bold">{t("product.description")}</h3>
             <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-              {product.description}
+              {tr.description}
             </p>
           </div>
           <div className="rounded-xl border bg-card p-6">
             <h3 className="text-base font-bold">{t("product.details")}</h3>
             <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-              {product.details}
+              {tr.details}
             </p>
           </div>
           <div className="rounded-xl border bg-card p-6">

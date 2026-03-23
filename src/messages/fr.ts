@@ -184,6 +184,8 @@ export const fr: Messages = {
       invalidCredentials: "Email ou mot de passe incorrect",
       noAccount: "Pas encore de compte ?",
       registerLink: "Créer un compte",
+      googleButton: "Continuer avec Google",
+      orContinueWith: "ou continuer par email",
     },
     register: {
       title: "Créer un compte",

@@ -31,6 +31,10 @@ export async function loginAction(
     return { success: false, error: "auth.login.invalidCredentials" };
   }
 
+  if (!user.passwordHash) {
+    return { success: false, error: "auth.login.invalidCredentials" };
+  }
+
   const valid = await verifyPassword(password, user.passwordHash);
   if (!valid) {
     return { success: false, error: "auth.login.invalidCredentials" };

@@ -10,6 +10,7 @@ import {
   LogOut,
   Menu,
   Settings,
+  Navigation,
 } from "lucide-react";
 
 import { isAdminAuthenticated } from "@/lib/auth/admin-session";
@@ -22,6 +23,7 @@ const navItems = [
   { href: "/admin/categories", label: "Categories", icon: FolderTree },
   { href: "/admin/reviews", label: "Reviews", icon: Star },
   { href: "/admin/content", label: "Content", icon: FileText },
+  { href: "/admin/navigation", label: "Navigation", icon: Navigation },
   { href: "/admin/settings/store", label: "Settings", icon: Settings },
 ];
 

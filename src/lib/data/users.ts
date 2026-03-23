@@ -47,3 +47,41 @@ export async function findUserById(id: string) {
     return null;
   }
 }
+
+export async function findOrCreateGoogleUser(profile: {
+  googleId: string;
+  email: string;
+  fullName: string;
+  image?: string;
+}) {
+  const delegate = getUserDelegate();
+  if (!delegate) throw new Error("User data layer unavailable");
+
+  const existing = await delegate.findUnique({
+    where: { googleId: profile.googleId },
+  });
+  if (existing) return existing;
+
+  const byEmail = await delegate.findUnique({
+    where: { email: profile.email.trim().toLowerCase() },
+  });
+  if (byEmail) {
+    return delegate.update({
+      where: { id: byEmail.id },
+      data: {
+        googleId: profile.googleId,
+        image: profile.image ?? byEmail.image,
+      },
+    });
+  }
+
+  return delegate.create({
+    data: {
+      fullName: profile.fullName,
+      email: profile.email.trim().toLowerCase(),
+      googleId: profile.googleId,
+      image: profile.image,
+      role: "CUSTOMER",
+    },
+  });
+}

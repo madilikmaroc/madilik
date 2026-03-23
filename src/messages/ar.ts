@@ -184,6 +184,8 @@ export const ar: Messages = {
       invalidCredentials: "البريد أو كلمة المرور غير صحيحة",
       noAccount: "ليس لديك حساب؟",
       registerLink: "إنشاء حساب",
+      googleButton: "المتابعة مع جوجل",
+      orContinueWith: "أو المتابعة بالبريد الإلكتروني",
     },
     register: {
       title: "إنشاء حساب",

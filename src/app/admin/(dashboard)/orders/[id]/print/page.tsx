@@ -29,9 +29,11 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
       {/* ── All styles are inline so nothing leaks from the website ── */}
       <style>{`
         @media print {
-          @page { size: A5; margin: 10mm; }
+          @page { size: A5; margin: 8mm; }
           body { background: #fff !important; }
           .no-print { display: none !important; }
+          .slip { border: none !important; box-shadow: none !important; margin: 0 !important; max-width: 100% !important; page-break-inside: avoid; break-inside: avoid; }
+          .slip * { page-break-inside: avoid; break-inside: avoid; }
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; color: #111; }
@@ -62,8 +64,8 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
         /* ── Customer box (most prominent) ── */
         .ship-to {
           border: 2px dashed #333;
-          margin: 16px;
-          padding: 16px 18px;
+          margin: 12px 16px;
+          padding: 12px 16px;
           border-radius: 6px;
         }
         .ship-to-label {
@@ -97,8 +99,8 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin: 0 16px 16px;
-          padding: 12px 18px;
+          margin: 0 16px 10px;
+          padding: 10px 16px;
           border: 2px solid #111;
           border-radius: 6px;
           background: #f9f9f6;
@@ -128,7 +130,7 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
 
         /* ── Items table ── */
         .items-section {
-          margin: 0 16px 12px;
+          margin: 0 16px 8px;
         }
         .items-section .section-title {
           font-size: 9px;
@@ -169,11 +171,11 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
 
         /* ── Notes ── */
         .notes {
-          margin: 0 16px 16px;
-          padding: 10px 14px;
+          margin: 0 16px 10px;
+          padding: 8px 14px;
           border: 1px solid #ddd;
           border-radius: 4px;
-          min-height: 40px;
+          min-height: 30px;
         }
         .notes .notes-title {
           font-size: 9px;
@@ -196,7 +198,7 @@ export default async function OrderPrintPage({ params }: PrintPageProps) {
 
         /* ── Cut line ── */
         .cut-line {
-          margin: 0 16px 12px;
+          margin: 0 16px 8px;
           border: none;
           border-top: 1px dashed #ccc;
         }
