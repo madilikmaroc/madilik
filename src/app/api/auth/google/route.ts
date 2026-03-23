@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID ?? "";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL?.trim() ?? "";
+
+function resolveRedirectUri(origin: string): string {
+  const configured = process.env.GOOGLE_OAUTH_REDIRECT_URI?.trim();
+  if (configured) return configured;
+  if (APP_URL) return `${APP_URL.replace(/\/+$/, "")}/api/auth/google/callback`;
+  return `${origin}/api/auth/google/callback`;
+}
+
+function sanitizeRedirectPath(raw: string | null): string {
+  if (!raw) return "/shop";
+  const value = raw.trim();
+  if (!value.startsWith("/")) return "/shop";
+  if (value.startsWith("//")) return "/shop";
+  return value;
+}
 
 export async function GET(request: NextRequest) {
   if (!CLIENT_ID) {
@@ -9,11 +25,10 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const redirectTo = request.nextUrl.searchParams.get("redirect") ?? "/shop";
-  const configuredRedirectUri = process.env.GOOGLE_OAUTH_REDIRECT_URI?.trim();
-  const redirectUri =
-    configuredRedirectUri ||
-    `${request.nextUrl.origin}/api/auth/google/callback`;
+  const redirectTo = sanitizeRedirectPath(
+    request.nextUrl.searchParams.get("redirect"),
+  );
+  const redirectUri = resolveRedirectUri(request.nextUrl.origin);
 
   const state = Buffer.from(JSON.stringify({ redirect: redirectTo })).toString(
     "base64url",

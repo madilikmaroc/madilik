@@ -12,6 +12,26 @@ const FLAG_CONFIG: Record<Locale, { src: string; code: string }> = {
   en: { src: "/flags/uk.png", code: "EN" },
 };
 
+function setGoogleTranslateCookie(locale: Locale) {
+  if (typeof document === "undefined") return;
+  const value = `/auto/${locale}`;
+  document.cookie = `googtrans=${value}; path=/; max-age=31536000`;
+
+  const parts = window.location.hostname.split(".");
+  if (parts.length >= 2) {
+    const domain = `.${parts.slice(-2).join(".")}`;
+    document.cookie = `googtrans=${value}; path=/; domain=${domain}; max-age=31536000`;
+  }
+}
+
+function enableBrowserTranslation(locale: Locale) {
+  if (typeof window === "undefined") return;
+  setGoogleTranslateCookie(locale);
+  sessionStorage.setItem("madilik-translate-locale", locale);
+  // Smart step: refresh once so browser-level translation services can apply instantly.
+  window.location.reload();
+}
+
 export function LanguageSwitcher() {
   const { locale, setLocale } = useLanguage();
   const [open, setOpen] = useState(false);
@@ -57,7 +77,12 @@ export function LanguageSwitcher() {
                 key={loc}
                 type="button"
                 onClick={() => {
+                  if (loc === locale) {
+                    setOpen(false);
+                    return;
+                  }
                   setLocale(loc);
+                  enableBrowserTranslation(loc);
                   setOpen(false);
                 }}
                 className={cn(
