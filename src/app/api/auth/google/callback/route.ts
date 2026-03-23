@@ -6,6 +6,11 @@ const CLIENT_ID = process.env.GOOGLE_CLIENT_ID ?? "";
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET ?? "";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL?.trim() ?? "";
 
+function getPublicBaseUrl(origin: string): string {
+  if (APP_URL) return APP_URL.replace(/\/+$/, "");
+  return origin.replace(/\/+$/, "");
+}
+
 function resolveRedirectUri(origin: string): string {
   const configured = process.env.GOOGLE_OAUTH_REDIRECT_URI?.trim();
   if (configured) return configured;
@@ -36,6 +41,7 @@ interface GoogleUserInfo {
 
 export async function GET(request: NextRequest) {
   const appOrigin = request.nextUrl.origin;
+  const publicBaseUrl = getPublicBaseUrl(appOrigin);
   const redirectUri = resolveRedirectUri(appOrigin);
 
   const code = request.nextUrl.searchParams.get("code");
@@ -55,13 +61,13 @@ export async function GET(request: NextRequest) {
 
   if (!code) {
     return NextResponse.redirect(
-      `${appOrigin}/login?error=google_denied&redirect=${encodeURIComponent(redirectTo)}`,
+      `${publicBaseUrl}/login?error=google_denied&redirect=${encodeURIComponent(redirectTo)}`,
     );
   }
 
   if (!CLIENT_ID || !CLIENT_SECRET) {
     return NextResponse.redirect(
-      `${appOrigin}/login?error=google_not_configured&redirect=${encodeURIComponent(redirectTo)}`,
+      `${publicBaseUrl}/login?error=google_not_configured&redirect=${encodeURIComponent(redirectTo)}`,
     );
   }
 
@@ -80,7 +86,7 @@ export async function GET(request: NextRequest) {
 
     if (!tokenRes.ok) {
       return NextResponse.redirect(
-        `${appOrigin}/login?error=google_token_failed&redirect=${encodeURIComponent(redirectTo)}`,
+        `${publicBaseUrl}/login?error=google_token_failed&redirect=${encodeURIComponent(redirectTo)}`,
       );
     }
 
@@ -93,7 +99,7 @@ export async function GET(request: NextRequest) {
 
     if (!userRes.ok) {
       return NextResponse.redirect(
-        `${appOrigin}/login?error=google_profile_failed&redirect=${encodeURIComponent(redirectTo)}`,
+        `${publicBaseUrl}/login?error=google_profile_failed&redirect=${encodeURIComponent(redirectTo)}`,
       );
     }
 
@@ -113,10 +119,10 @@ export async function GET(request: NextRequest) {
     session.loginAt = Date.now();
     await session.save();
 
-    return NextResponse.redirect(`${appOrigin}${redirectTo}`);
+    return NextResponse.redirect(`${publicBaseUrl}${redirectTo}`);
   } catch {
     return NextResponse.redirect(
-      `${appOrigin}/login?error=google_failed&redirect=${encodeURIComponent(redirectTo)}`,
+      `${publicBaseUrl}/login?error=google_failed&redirect=${encodeURIComponent(redirectTo)}`,
     );
   }
 }

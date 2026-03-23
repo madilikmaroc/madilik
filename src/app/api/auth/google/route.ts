@@ -3,6 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID ?? "";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL?.trim() ?? "";
 
+function getPublicBaseUrl(origin: string): string {
+  if (APP_URL) return APP_URL.replace(/\/+$/, "");
+  return origin.replace(/\/+$/, "");
+}
+
 function resolveRedirectUri(origin: string): string {
   const configured = process.env.GOOGLE_OAUTH_REDIRECT_URI?.trim();
   if (configured) return configured;
@@ -19,9 +24,10 @@ function sanitizeRedirectPath(raw: string | null): string {
 }
 
 export async function GET(request: NextRequest) {
+  const publicBaseUrl = getPublicBaseUrl(request.nextUrl.origin);
   if (!CLIENT_ID) {
     return NextResponse.redirect(
-      new URL("/login?error=google_not_configured", request.nextUrl.origin),
+      `${publicBaseUrl}/login?error=google_not_configured`,
     );
   }
 
