@@ -14,6 +14,7 @@ import { SearchDialog } from "@/components/layout/search-dialog";
 import { CartDrawer } from "@/components/layout/cart-drawer";
 import { SignInModal } from "@/components/layout/sign-in-modal";
 import { Button } from "@/components/ui/button";
+import { normalizeMediaSrc } from "@/lib/media-url";
 import {
   Sheet,
   SheetContent,
@@ -27,6 +28,7 @@ interface NavbarProps {
   announcementVisible?: boolean;
   categories?: { name: string; slug: string }[];
   isLoggedIn?: boolean;
+  customerImageUrl?: string | null;
 }
 
 export function Navbar({
@@ -34,6 +36,7 @@ export function Navbar({
   announcementVisible = true,
   categories = [],
   isLoggedIn = false,
+  customerImageUrl = null,
 }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -212,7 +215,17 @@ export function Navbar({
                   className="size-10 text-foreground hover:bg-muted"
                   aria-label={t("nav.account")}
                 >
-                  <User className="size-[22px]" />
+                  <div className="flex size-full items-center justify-center">
+                    {normalizeMediaSrc(customerImageUrl) ? (
+                      <img
+                        src={normalizeMediaSrc(customerImageUrl)}
+                        alt={t("nav.account")}
+                        className="size-[22px] rounded-full object-cover"
+                      />
+                    ) : (
+                      <User className="size-[22px]" />
+                    )}
+                  </div>
                 </Button>
               </Link>
             ) : (
@@ -260,7 +273,11 @@ export function Navbar({
       <SearchDialog open={searchOpen} onClose={closeSearch} />
       <CartDrawer open={cartOpen} onClose={closeCart} />
       {!isLoggedIn && (
-        <SignInModal open={signInOpen} onClose={() => setSignInOpen(false)} />
+        <SignInModal
+          open={signInOpen}
+          onClose={() => setSignInOpen(false)}
+          redirectUrl="/shop"
+        />
       )}
     </>
   );

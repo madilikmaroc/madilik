@@ -1,6 +1,4 @@
 "use server";
-
-import { redirect } from "next/navigation";
 import { findUserByEmail, createUser } from "@/lib/data/users";
 import { hashPassword } from "@/lib/auth/password";
 import { getCustomerSession } from "@/lib/auth/customer-session";
@@ -78,6 +76,8 @@ export async function registerAction(
   session.loginAt = Date.now();
   await session.save();
 
-  const target = redirectUrl.startsWith("/") ? redirectUrl : "/shop";
-  redirect(target);
+  // Keep this action modal-friendly: client components decide whether to
+  // push/close/navigate after successful registration.
+  void redirectUrl;
+  return { success: true };
 }

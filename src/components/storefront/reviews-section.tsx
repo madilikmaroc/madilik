@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/contexts/language-context";
 import { ReviewForm } from "./review-form";
 import { ReviewsList } from "./reviews-list";
 import type { ReviewWithUser } from "@/lib/data/reviews";
+import { SignInModal } from "@/components/layout/sign-in-modal";
+import { useState } from "react";
 
 interface Customer {
   userId: string;
@@ -30,7 +31,7 @@ export function ReviewsSection({
 }: ReviewsSectionProps) {
   const { t } = useLanguage();
   const pathname = usePathname();
-  const loginHref = pathname ? `/login?redirect=${encodeURIComponent(pathname)}` : "/login";
+  const [authOpen, setAuthOpen] = useState(false);
 
   return (
     <section className="border-t py-12">
@@ -40,9 +41,13 @@ export function ReviewsSection({
         <div className="mt-4 rounded-lg border bg-muted/30 p-4">
           <p className="text-sm text-muted-foreground">
             {t("reviews.loginRequired")}{" "}
-            <Link href={loginHref} className="font-medium text-primary hover:underline">
+            <button
+              type="button"
+              className="font-medium text-primary hover:underline"
+              onClick={() => setAuthOpen(true)}
+            >
               {t("auth.login.submit")}
-            </Link>
+            </button>
           </p>
         </div>
       ) : hasReviewed ? (
@@ -61,6 +66,12 @@ export function ReviewsSection({
       <div className="mt-8">
         <ReviewsList reviews={reviews} />
       </div>
+
+      <SignInModal
+        open={authOpen}
+        onClose={() => setAuthOpen(false)}
+        redirectUrl={pathname || "/shop"}
+      />
     </section>
   );
 }

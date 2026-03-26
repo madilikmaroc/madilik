@@ -6,7 +6,6 @@ import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 
 import { useLanguage } from "@/contexts/language-context";
-import { Breadcrumbs } from "@/components/storefront";
 import { buttonVariants } from "@/components/ui/button";
 
 function SuccessContent() {
@@ -24,16 +23,8 @@ function SuccessContent() {
   }, []);
 
   return (
-    <div className="container mx-auto px-4 py-16 md:py-24">
-      <Breadcrumbs
-        items={[
-          { label: t("cart.title"), href: "/cart" },
-          { label: t("checkout.title"), href: "/checkout" },
-          { label: t("order.successTitle") },
-        ]}
-        className="mb-8"
-      />
-      <div className="mx-auto max-w-lg text-center">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="w-full max-w-lg rounded-2xl border bg-background p-6 text-center shadow-2xl sm:p-8">
         <CheckCircle2 className="mx-auto size-16 text-green-500" />
         <h1 className="mt-6 text-2xl font-bold tracking-tight sm:text-3xl">
           {t("order.successTitle")}
@@ -49,12 +40,14 @@ function SuccessContent() {
             {t("order.orderReference")}: {orderReference}
           </p>
         )}
-        <Link
-          href="/shop"
-          className={buttonVariants({ size: "lg", className: "mt-8" })}
-        >
-          {t("order.continueShopping")}
-        </Link>
+        <div className="mt-8 flex justify-center">
+          <Link
+            href="/shop"
+            className={buttonVariants({ size: "lg" })}
+          >
+            {t("order.continueShopping")}
+          </Link>
+        </div>
       </div>
     </div>
   );
