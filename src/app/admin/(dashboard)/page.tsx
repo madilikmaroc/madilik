@@ -11,6 +11,9 @@ import {
 
 import { getOrderStats } from "@/lib/data/admin-orders";
 
+// Ensure the admin dashboard order counters update immediately after new orders.
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboardPage() {
   const stats = await getOrderStats();
 
