@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DeleteProductButton } from "./delete-product-button";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminProductsPage() {
   const products = await getAllAdminProducts();
 
@@ -54,6 +56,7 @@ export default async function AdminProductsPage() {
                 <th className="px-4 py-3.5">Stock</th>
                 <th className="px-4 py-3.5">Featured</th>
                 <th className="px-4 py-3.5">Badge</th>
+                <th className="px-4 py-3.5">Orders</th>
                 <th className="px-4 py-3.5">Created</th>
                 <th className="px-4 py-3.5" />
               </tr>
@@ -131,6 +134,9 @@ export default async function AdminProductsPage() {
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}
+                  </td>
+                  <td className="px-4 py-3.5 text-muted-foreground">
+                    {product.ordersCount ?? 0}
                   </td>
                   <td className="px-4 py-3.5 text-muted-foreground">
                     {new Date(product.createdAt).toLocaleDateString()}

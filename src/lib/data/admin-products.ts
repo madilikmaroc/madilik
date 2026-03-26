@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { normalizeMediaSrc } from "@/lib/media-url";
+import type { OrderStatus } from "@prisma/client";
 
 function sanitizeImageUrls(urls: string[]) {
   return urls
@@ -20,18 +21,67 @@ export type AdminProductWithRelations = Awaited<
     : T
   : never;
 
+const CONFIRMED_STATUS: OrderStatus = "CONFIRMED";
+
+async function getConfirmedOrdersQuantityByProductIds(
+  productIds: string[],
+): Promise<Map<string, number>> {
+  const safeIds = productIds.filter(Boolean);
+  if (safeIds.length === 0) return new Map();
+
+  const groups = await prisma.orderItem.groupBy({
+    by: ["productId"],
+    where: {
+      productId: { in: safeIds },
+      order: { status: CONFIRMED_STATUS },
+    },
+    _sum: { quantity: true },
+  });
+
+  const map = new Map<string, number>();
+  for (const g of groups) {
+    const pid = g.productId;
+    if (!pid) continue;
+    map.set(pid, g._sum.quantity ?? 0);
+  }
+  return map;
+}
+
 export async function getAllAdminProducts() {
-  return prisma.product.findMany({
+  const products = await prisma.product.findMany({
     include: productInclude,
     orderBy: { createdAt: "desc" },
   });
+
+  const productIds = products.map((p) => p.id);
+  const confirmedQtyMap = await getConfirmedOrdersQuantityByProductIds(productIds);
+
+  return products.map((p) => ({
+    ...p,
+    ordersCount: confirmedQtyMap.get(p.id) ?? 0,
+  }));
 }
 
 export async function getAdminProductById(id: string) {
-  return prisma.product.findUnique({
+  const product = await prisma.product.findUnique({
     where: { id },
     include: productInclude,
   });
+
+  if (!product) return null;
+
+  const agg = await prisma.orderItem.aggregate({
+    where: {
+      productId: id,
+      order: { status: CONFIRMED_STATUS },
+    },
+    _sum: { quantity: true },
+  });
+
+  return {
+    ...product,
+    ordersCount: agg._sum.quantity ?? 0,
+  };
 }
 
 export async function createProduct(data: {
