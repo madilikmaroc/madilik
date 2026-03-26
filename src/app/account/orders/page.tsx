@@ -6,6 +6,9 @@ import {
 } from "@/lib/data/customer-orders";
 import { AccountOrdersListClient } from "./account-orders-list-client";
 
+// Ensure the "My orders" list reflects newly created orders immediately.
+export const dynamic = "force-dynamic";
+
 export default async function AccountOrdersPage() {
   const customer = await getCustomer();
   if (!customer) {
