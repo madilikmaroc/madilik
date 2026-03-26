@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { useLanguage } from "@/contexts/language-context";
+import { useMemo, useState } from "react";
 import { formatPrice } from "@/lib/formatters";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { OrderStatus } from "@prisma/client";
 import type { CustomerOrderDetail } from "@/lib/data/customer-orders";
+import { CancelOrderModal } from "@/components/account/cancel-order-modal";
 
 const STATUS_KEYS: Record<OrderStatus, string> = {
   PENDING: "account.orders.statusPending",
@@ -24,6 +27,16 @@ export function AccountOrderDetailClient({ order }: AccountOrderDetailClientProp
   const { t } = useLanguage();
   const locale = (order.locale || "en") as "en" | "fr" | "ar";
   const statusLabel = t(STATUS_KEYS[order.status] ?? "account.orders.statusPending");
+  const now = useMemo(() => Date.now(), []);
+  const [cancelOpen, setCancelOpen] = useState(false);
+
+  function canCancelOrder() {
+    if (order.status === "CANCELED" || order.status === "DELIVERED") return false;
+    if (order.status !== "PENDING" && order.status !== "CONFIRMED") return false;
+    const createdAtMs = new Date(order.createdAt).getTime();
+    if (!Number.isFinite(createdAtMs)) return false;
+    return now - createdAtMs <= 5 * 60 * 60 * 1000;
+  }
 
   return (
     <div className="container px-4 py-12">
@@ -57,6 +70,23 @@ export function AccountOrderDetailClient({ order }: AccountOrderDetailClientProp
               {statusLabel}
             </Badge>
           </div>
+
+          {canCancelOrder() && (
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => setCancelOpen(true)}
+              >
+                {t("account.orders.cancel.short") || "Cancel order"}
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                {t("account.orders.cancel.withinFiveHours") ||
+                  "You can cancel within the first 5 hours."}
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="rounded-xl border bg-card p-6">
@@ -122,6 +152,15 @@ export function AccountOrderDetailClient({ order }: AccountOrderDetailClientProp
             {t("order.codMessage")}
           </p>
         </div>
+
+        {cancelOpen && (
+          <CancelOrderModal
+            open={true}
+            onClose={() => setCancelOpen(false)}
+            orderId={order.id}
+            orderReference={order.reference}
+          />
+        )}
       </div>
     </div>
   );

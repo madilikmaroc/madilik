@@ -35,9 +35,19 @@ export function validateOrderInput(input: unknown): { valid: false; error: strin
   const location = typeof body.location === "string" ? body.location.trim() : "";
   const locale = typeof body.locale === "string" ? body.locale.trim() || "en" : "en";
 
-  if (!customerName) return { valid: false, error: "Full name is required" };
-  if (!phone) return { valid: false, error: "Phone is required" };
-  if (!location) return { valid: false, error: "Location is required" };
+  if (!customerName || customerName.length < 2) {
+    return { valid: false, error: "validation.fullName" };
+  }
+
+  // Allow `+` and separators in the raw input, but validate digit length.
+  const digitsOnly = phone.replace(/[^\d]/g, "");
+  if (!digitsOnly || digitsOnly.length < 8 || digitsOnly.length > 15) {
+    return { valid: false, error: "validation.phone" };
+  }
+
+  if (!location || location.length < 4) {
+    return { valid: false, error: "validation.location" };
+  }
 
   if (!Array.isArray(body.items) || body.items.length === 0) {
     return { valid: false, error: "EMPTY_CART" };

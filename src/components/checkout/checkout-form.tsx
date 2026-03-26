@@ -21,9 +21,18 @@ interface FormErrors {
 function getValidateForm(t: (k: string) => string) {
   return (data: CheckoutFormData): FormErrors => {
     const errors: FormErrors = {};
-    if (!data.fullName.trim()) errors.fullName = t("validation.fullName");
-    if (!data.phone.trim()) errors.phone = t("validation.phone");
-    if (!data.location.trim()) errors.location = t("validation.location");
+    const fullName = data.fullName.trim();
+    const phoneRaw = data.phone.trim();
+    const location = data.location.trim();
+
+    if (!fullName || fullName.length < 2) errors.fullName = t("validation.fullName");
+
+    const digitsOnly = phoneRaw.replace(/[^\d]/g, "");
+    if (!digitsOnly || digitsOnly.length < 8 || digitsOnly.length > 15) {
+      errors.phone = t("validation.phone");
+    }
+
+    if (!location || location.length < 4) errors.location = t("validation.location");
     return errors;
   };
 }

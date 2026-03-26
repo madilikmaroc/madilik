@@ -227,6 +227,27 @@ export const ar: Messages = {
       items: "المنتجات",
       total: "المجموع",
       viewDetails: "عرض التفاصيل",
+      cancel: {
+        title: "إلغاء الطلب",
+        short: "إلغاء",
+        withinFiveHours:
+          "يمكنك إلغاء الطلب خلال أول 5 ساعات بعد إتمام الطلب.",
+        reference: "الطلب",
+        message:
+          "الإلغاء متاح فقط خلال أول 5 ساعات. بعد ذلك قد تكون المعالجة بدأت.",
+        action: "إلغاء الطلب",
+        close: "إغلاق",
+        submitting: "جارٍ الإلغاء...",
+        viewDetails: "عرض تفاصيل الطلب",
+        errors: {
+          UNAUTHORIZED: "يرجى تسجيل الدخول لإلغاء الطلب.",
+          ORDER_NOT_FOUND: "الطلب غير موجود.",
+          TOO_LATE: "عذرًا، انتهت مدة الإلغاء.",
+          NOT_ALLOWED: "لا يمكن إلغاء هذا الطلب في هذه المرحلة.",
+          ALREADY_CANCELED: "تم إلغاء هذا الطلب بالفعل.",
+          CANCEL_FAILED: "تعذر إلغاء الطلب. حاول مرة أخرى.",
+        },
+      },
       backToOrders: "العودة للطلبات",
       orderDetails: "طلب",
       product: "المنتج",

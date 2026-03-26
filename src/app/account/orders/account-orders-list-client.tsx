@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import { useLanguage } from "@/contexts/language-context";
 import { formatPrice } from "@/lib/formatters";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { OrderStatus } from "@prisma/client";
+import { CancelOrderModal } from "@/components/account/cancel-order-modal";
 
 const STATUS_KEYS: Record<OrderStatus, string> = {
   PENDING: "account.orders.statusPending",
@@ -39,6 +42,22 @@ function OrderStatusBadge({ status, t }: { status: OrderStatus; t: (k: string) =
 
 export function AccountOrdersListClient({ orders }: AccountOrdersListClientProps) {
   const { t, locale } = useLanguage();
+
+  const [cancelModalOrderId, setCancelModalOrderId] = useState<string | null>(null);
+  const now = useMemo(() => Date.now(), []);
+
+  function canCancelOrder(order: OrderRow) {
+    if (order.status === "CANCELED" || order.status === "DELIVERED") return false;
+    if (order.status !== "PENDING" && order.status !== "CONFIRMED") return false;
+
+    const createdAtMs = new Date(order.createdAt).getTime();
+    if (!Number.isFinite(createdAtMs)) return false;
+    return now - createdAtMs <= 5 * 60 * 60 * 1000;
+  }
+
+  const cancelOrder = cancelModalOrderId
+    ? orders.find((o) => o.id === cancelModalOrderId)
+    : undefined;
 
   return (
     <div className="container px-4 py-12">
@@ -99,12 +118,24 @@ export function AccountOrdersListClient({ orders }: AccountOrdersListClientProps
                       {formatPrice(order.total, order.locale)}
                     </td>
                     <td className="px-4 py-3">
-                      <Link
-                        href={`/account/orders/${order.id}`}
-                        className="text-primary hover:underline"
-                      >
-                        {t("account.orders.viewDetails")}
-                      </Link>
+                      <div className="flex items-center justify-end gap-3">
+                        {canCancelOrder(order) && (
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => setCancelModalOrderId(order.id)}
+                          >
+                            {t("account.orders.cancel.short") || "Cancel"}
+                          </Button>
+                        )}
+                        <Link
+                          href={`/account/orders/${order.id}`}
+                          className="text-primary hover:underline"
+                        >
+                          {t("account.orders.viewDetails")}
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -113,6 +144,15 @@ export function AccountOrdersListClient({ orders }: AccountOrdersListClientProps
           </div>
         )}
       </div>
+
+      {cancelOrder && (
+        <CancelOrderModal
+          open={true}
+          onClose={() => setCancelModalOrderId(null)}
+          orderId={cancelOrder.id}
+          orderReference={cancelOrder.reference}
+        />
+      )}
     </div>
   );
 }
