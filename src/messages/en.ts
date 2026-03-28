@@ -89,6 +89,9 @@ export const en = {
   },
   product: {
     addToCart: "Add to Cart",
+    buyNow: "Buy now",
+    buyNowTitle: "Buy now",
+    buyNowSubtitle: "Enter your details to place this order instantly.",
     inStock: "In stock ({count} available)",
     outOfStock: "Out of stock",
     reviews: "({count} reviews)",

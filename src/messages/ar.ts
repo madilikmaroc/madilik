@@ -91,6 +91,9 @@ export const ar: Messages = {
   },
   product: {
     addToCart: "أضف للسلة",
+    buyNow: "اشتر الآن",
+    buyNowTitle: "اشتر الآن",
+    buyNowSubtitle: "أدخل بياناتك لإتمام طلب هذا المنتج مباشرة.",
     inStock: "متوفر ({count} قطعة)",
     outOfStock: "نفذ من المخزون",
     reviews: "({count} تقييم)",

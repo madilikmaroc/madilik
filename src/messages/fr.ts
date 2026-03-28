@@ -91,6 +91,9 @@ export const fr: Messages = {
   },
   product: {
     addToCart: "Ajouter au panier",
+    buyNow: "Acheter maintenant",
+    buyNowTitle: "Acheter maintenant",
+    buyNowSubtitle: "Saisissez vos coordonnées pour commander ce produit immédiatement.",
     inStock: "En stock ({count} disponible)",
     outOfStock: "Rupture de stock",
     reviews: "({count} avis)",
