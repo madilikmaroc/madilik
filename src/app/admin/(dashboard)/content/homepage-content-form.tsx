@@ -74,6 +74,7 @@ export function HomepageContentForm({ content }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [bannerPickPreview, setBannerPickPreview] = useState<string | null>(null);
+  const [bannerPreviewRatio, setBannerPreviewRatio] = useState<number>(4 / 3);
   const [uploadOk, setUploadOk] = useState(false);
   const [showBannerPath, setShowBannerPath] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -282,12 +283,25 @@ export function HomepageContentForm({ content }: Props) {
                         )}
                       </div>
                       {displaySrc ? (
-                        <div className="relative aspect-[21/7] w-full max-w-2xl overflow-hidden rounded-lg border bg-muted">
+                        <div
+                          className="relative w-full max-w-2xl overflow-hidden rounded-lg border bg-muted/30"
+                          style={{ aspectRatio: String(bannerPreviewRatio) }}
+                        >
                           {/* Plain <img>: avoids next/image optimizer issues with /uploads/ on production */}
                           <img
                             src={displaySrc}
                             alt="Banner preview"
-                            className="absolute inset-0 size-full object-cover"
+                            className="size-full object-contain object-center"
+                            onLoad={(e) => {
+                              const img = e.currentTarget;
+                              if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+                                const ratio = img.naturalWidth / img.naturalHeight;
+                                const clamped = Math.min(Math.max(ratio, 0.7), 2.2);
+                                setBannerPreviewRatio(clamped);
+                              } else {
+                                setBannerPreviewRatio(4 / 3);
+                              }
+                            }}
                           />
                         </div>
                       ) : null}
