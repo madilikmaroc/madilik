@@ -68,32 +68,12 @@ export function ProductDetailsClient({ product }: ProductDetailsClientProps) {
   return (
     <>
       <div className="mt-8 space-y-4">
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-3">
           <QuantitySelector
             value={quantity}
             onValueChange={setQuantity}
             max={product.stock}
           />
-          <Button
-            size="lg"
-            className="min-w-[170px] flex-1"
-            disabled={product.stock === 0}
-            onClick={handleAddToCart}
-          >
-            {t("product.addToCart")}
-          </Button>
-          <Button
-            size="lg"
-            variant="secondary"
-            className="min-w-[170px] flex-1"
-            disabled={product.stock === 0}
-            onClick={() => {
-              setBuyNowError(null);
-              setBuyNowOpen(true);
-            }}
-          >
-            {t("product.buyNow")}
-          </Button>
           <Button
             variant="outline"
             size="icon-lg"
@@ -103,6 +83,28 @@ export function ProductDetailsClient({ product }: ProductDetailsClientProps) {
             <Heart
               className={`size-5 ${isWishlisted ? "fill-red-500 text-red-500" : ""}`}
             />
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            size="lg"
+            className="h-11 min-w-0 flex-1"
+            disabled={product.stock === 0}
+            onClick={handleAddToCart}
+          >
+            {t("product.addToCart")}
+          </Button>
+          <Button
+            size="lg"
+            className="h-11 min-w-0 flex-1 border border-accent/60 bg-accent text-accent-foreground shadow-sm hover:bg-accent/90"
+            disabled={product.stock === 0}
+            onClick={() => {
+              setBuyNowError(null);
+              setBuyNowOpen(true);
+            }}
+          >
+            {t("product.buyNow")}
           </Button>
         </div>
       </div>
