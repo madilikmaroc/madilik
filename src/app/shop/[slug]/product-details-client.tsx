@@ -108,6 +108,7 @@ export function ProductDetailsClient({ product }: ProductDetailsClientProps) {
           </Button>
         </div>
       </div>
+
       {buyNowOpen && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm">
           <div className="w-full max-w-2xl rounded-2xl border bg-background p-5 shadow-2xl sm:p-6">

@@ -198,6 +198,32 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
 
   const orderReference = `MDL-${order.id.slice(-8).toUpperCase()}`;
 
+  // Trigger Expo Push Notification to all registered Admin Devices (non-blocking)
+  (prisma as any).adminDevice.findMany({ select: { token: true } })
+    .then(async (devices: any[]) => {
+      if (devices.length === 0) return;
+      const tokens = devices.map((d: any) => d.token);
+      
+      const message = {
+        to: tokens,
+        sound: 'madilik_notification',
+        title: '💸 New Order!',
+        body: `${orderReference} • ${input.customerName}\nTotal: ${total.toFixed(2)} MAD`,
+        data: { orderId: order.id },
+      };
+
+      await fetch('https://exp.host/--/api/v2/push/send', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Accept-encoding': 'gzip, deflate',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(message),
+      });
+    })
+    .catch((err: any) => console.error('[PushNotification] Delivery failed:', err));
+
   return {
     success: true,
     orderId: order.id,

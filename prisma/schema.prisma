@@ -207,3 +207,12 @@ model EmailSubscriber {
 
   @@map("email_subscribers")
 }
+
+model AdminDevice {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admin_devices")
+}

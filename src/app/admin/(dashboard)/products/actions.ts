@@ -9,7 +9,7 @@ import {
   getAdminProductById,
 } from "@/lib/data/admin-products";
 import { findOrCreateCategoryByName } from "@/lib/data/admin-categories";
-import { uploadProductImage } from "@/lib/upload";
+import { uploadProductImage, deleteMultipleFromStorage } from "@/lib/upload";
 
 const BADGE_OPTIONS = ["New", "Sale", "Bestseller"] as const;
 
@@ -209,6 +209,13 @@ export async function uploadProductImageAction(
 
 export async function deleteProductAction(productId: string): Promise<{ error?: string }> {
   try {
+    // Fetch product images before deletion so we can clean up storage
+    const existing = await getAdminProductById(productId);
+    if (existing) {
+      const imageUrls = existing.images.map((i: { url: string }) => i.url);
+      await deleteMultipleFromStorage(imageUrls);
+    }
+
     await deleteProduct(productId);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Failed to delete product";

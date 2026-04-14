@@ -1,34 +1,15 @@
-import { writeFile, mkdir, chmod } from "fs/promises";
-import { existsSync } from "fs";
 import path from "path";
-import { platform } from "os";
+import { supabaseAdmin, STORAGE_BUCKET } from "@/lib/supabase";
 
-/**
- * Resolve the directory where public/uploads/ should live.
- *
- * Priority:
- * 1. MADILIK_PROJECT_ROOT env var (explicit override for VPS/PM2)
- * 2. Next.js standalone: __dirname walks up to the standalone root
- * 3. process.cwd() if it contains package.json (dev / normal start)
- * 4. Fallback to cwd
- */
-function resolveProjectRoot(): string {
-  const fromEnv = process.env.MADILIK_PROJECT_ROOT?.trim();
-  if (fromEnv) return path.resolve(fromEnv);
+const SUPABASE_URL = process.env.SUPABASE_URL ?? "";
 
-  const cwd = process.cwd();
-  if (existsSync(path.join(cwd, "public"))) return cwd;
-  if (existsSync(path.join(cwd, "package.json"))) return cwd;
-  return cwd;
-}
-
-/** All user uploads live under public/uploads/{segment} */
-const UPLOADS_ROOT = "uploads";
+/* ------------------------------------------------------------------ */
+/*  MIME / extension helpers  (unchanged from local-disk version)      */
+/* ------------------------------------------------------------------ */
 
 const ALLOWED_CANONICAL = ["image/jpeg", "image/png", "image/webp"] as const;
 type CanonicalMime = (typeof ALLOWED_CANONICAL)[number];
 
-/** Map odd client MIME strings to canonical types (mobile browsers vary). */
 const MIME_ALIASES: Record<string, CanonicalMime> = {
   "image/jpg": "image/jpeg",
   "image/pjpeg": "image/jpeg",
@@ -97,23 +78,9 @@ function resolveCanonicalVideoMime(file: File): VideoCanonicalMime | null {
   return VIDEO_EXT_TO_MIME[ext] ?? null;
 }
 
-function validateProductVideoFile(file: File): { error: string } | null {
-  const mime = resolveCanonicalVideoMime(file);
-  if (!mime) {
-    return {
-      error: "Invalid video type. Use MP4, WebM, or MOV.",
-    };
-  }
-  if (file.size > MAX_PRODUCT_VIDEO_BYTES) {
-    return { error: "Video too large. Maximum size is 24MB." };
-  }
-  if (file.size < 1) {
-    return { error: "File is empty." };
-  }
-  return null;
-}
-
-export type UploadSegment = "products" | "banners" | "categories" | "reviews";
+/* ------------------------------------------------------------------ */
+/*  Validation                                                         */
+/* ------------------------------------------------------------------ */
 
 function validateImageFile(file: File): { error: string } | null {
   const mime = resolveCanonicalMime(file);
@@ -129,10 +96,119 @@ function validateImageFile(file: File): { error: string } | null {
   return null;
 }
 
+function validateProductVideoFile(file: File): { error: string } | null {
+  const mime = resolveCanonicalVideoMime(file);
+  if (!mime) {
+    return { error: "Invalid video type. Use MP4, WebM, or MOV." };
+  }
+  if (file.size > MAX_PRODUCT_VIDEO_BYTES) {
+    return { error: "Video too large. Maximum size is 24MB." };
+  }
+  if (file.size < 1) {
+    return { error: "File is empty." };
+  }
+  return null;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Upload segment types                                               */
+/* ------------------------------------------------------------------ */
+
+export type UploadSegment = "products" | "banners" | "categories" | "reviews";
+
+/* ------------------------------------------------------------------ */
+/*  Supabase Storage helpers                                           */
+/* ------------------------------------------------------------------ */
+
 /**
- * Save an image under public/uploads/{segment}/ and return public path /uploads/{segment}/filename
+ * Build the full public URL for a file in the uploads bucket.
  */
-export async function saveUploadImage(
+function publicUrl(storagePath: string): string {
+  return `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${storagePath}`;
+}
+
+/**
+ * Upload a buffer to Supabase Storage and return the public URL.
+ */
+async function uploadToStorage(
+  storagePath: string,
+  buffer: Buffer,
+  contentType: string,
+): Promise<{ url: string } | { error: string }> {
+  const { error } = await supabaseAdmin.storage
+    .from(STORAGE_BUCKET)
+    .upload(storagePath, buffer, {
+      contentType,
+      upsert: false,
+    });
+
+  if (error) {
+    console.error("Supabase upload error:", error.message);
+    return { error: `Upload failed: ${error.message}` };
+  }
+
+  return { url: publicUrl(storagePath) };
+}
+
+/**
+ * Delete a file from Supabase Storage given its full public URL.
+ * Silently logs errors — callers should not block on storage cleanup failures.
+ */
+export async function deleteFromStorage(fileUrl: string): Promise<void> {
+  if (!fileUrl) return;
+
+  // Extract the storage path from the full URL
+  // URL format: {SUPABASE_URL}/storage/v1/object/public/uploads/{segment}/{filename}
+  const marker = `/storage/v1/object/public/${STORAGE_BUCKET}/`;
+  const idx = fileUrl.indexOf(marker);
+  if (idx === -1) {
+    // Not a Supabase Storage URL (could be an old local path) — skip
+    return;
+  }
+
+  const storagePath = fileUrl.slice(idx + marker.length);
+  if (!storagePath) return;
+
+  const { error } = await supabaseAdmin.storage
+    .from(STORAGE_BUCKET)
+    .remove([storagePath]);
+
+  if (error) {
+    console.error(`Failed to delete ${storagePath} from storage:`, error.message);
+  }
+}
+
+/**
+ * Delete multiple files from Supabase Storage. Non-blocking — errors are logged.
+ */
+export async function deleteMultipleFromStorage(fileUrls: string[]): Promise<void> {
+  const paths: string[] = [];
+  const marker = `/storage/v1/object/public/${STORAGE_BUCKET}/`;
+
+  for (const url of fileUrls) {
+    if (!url) continue;
+    const idx = url.indexOf(marker);
+    if (idx === -1) continue;
+    const p = url.slice(idx + marker.length);
+    if (p) paths.push(p);
+  }
+
+  if (paths.length === 0) return;
+
+  const { error } = await supabaseAdmin.storage
+    .from(STORAGE_BUCKET)
+    .remove(paths);
+
+  if (error) {
+    console.error("Failed to delete files from storage:", error.message);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Image upload                                                       */
+/* ------------------------------------------------------------------ */
+
+async function saveUploadImage(
   file: File,
   segment: UploadSegment,
   namePrefix: string,
@@ -145,26 +221,17 @@ export async function saveUploadImage(
 
   const base = `${namePrefix}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   const filename = `${base}${ext}`;
-
-  const publicDir = path.join(resolveProjectRoot(), "public", UPLOADS_ROOT, segment);
-  await mkdir(publicDir, { recursive: true });
+  const storagePath = `${segment}/${filename}`;
 
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
-  const filePath = path.join(publicDir, filename);
 
-  await writeFile(filePath, buffer);
-
-  if (platform() !== "win32") {
-    try {
-      await chmod(filePath, 0o644);
-    } catch {
-      /* ignore chmod issues */
-    }
-  }
-
-  return { url: `/${UPLOADS_ROOT}/${segment}/${filename}` };
+  return uploadToStorage(storagePath, buffer, mime);
 }
+
+/* ------------------------------------------------------------------ */
+/*  Video upload                                                       */
+/* ------------------------------------------------------------------ */
 
 async function saveUploadVideo(
   file: File,
@@ -179,26 +246,17 @@ async function saveUploadVideo(
 
   const base = `${namePrefix}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   const filename = `${base}${ext}`;
-
-  const publicDir = path.join(resolveProjectRoot(), "public", UPLOADS_ROOT, segment);
-  await mkdir(publicDir, { recursive: true });
+  const storagePath = `${segment}/${filename}`;
 
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
-  const filePath = path.join(publicDir, filename);
 
-  await writeFile(filePath, buffer);
-
-  if (platform() !== "win32") {
-    try {
-      await chmod(filePath, 0o644);
-    } catch {
-      /* ignore chmod issues */
-    }
-  }
-
-  return { url: `/${UPLOADS_ROOT}/${segment}/${filename}` };
+  return uploadToStorage(storagePath, buffer, mime);
 }
+
+/* ------------------------------------------------------------------ */
+/*  Public API (same signatures as before — no consumer changes needed)*/
+/* ------------------------------------------------------------------ */
 
 /** Product gallery: JPEG, PNG, WebP (5MB max) or MP4 / WebM / MOV (24MB max). */
 export async function uploadProductMedia(
